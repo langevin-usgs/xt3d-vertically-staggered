@@ -18,7 +18,9 @@
 
 \newcommand{\matr}[1]{\mathbf{#1}}
 
-\title{Application of the XT3D Multi-Point Flux Approximation to Vertically Staggered Grids}
+\title{Application of the XT3D Multi-Point Flux Approximation to Vertically Staggered Grids \\
+	\normalsize or maybe \\
+	\LARGE Application of the XT3D Multi-Point Flux Approximation and Enhanced Grid Connectivity to Improve Accuracy of Flows in MODFLOW 6 Models With Steeply Sloping Layers}
 \author{Xt3d Enthusiast1  \\
 	Some Company  \\
 	\and 
@@ -34,6 +36,11 @@
 
 \maketitle
 
+\textbf{Conflict of interest:} None.
+
+\textbf{Key words:} Key words ...
+
+\textbf{Article impact statement:} Article impact statement ...
 
 \begin{abstract}
 This is the best paper ever... 
@@ -50,25 +57,65 @@ Some intro stuff here about MODFLOW \citep{modflow6framework, modflow6gwf, modfl
 %	\label{fig:firstfigure}
 %\end{figure}
 
-\section{Example}
+\section{Theoretical Background}
 
-Some examples here...  
+Introduce vertically offset grids and explain the connection angle/length issue.
 
-\subsection{Example 1}
+Summarize XT3D and how it accounts for connection angle/length.  Reference Kerry and Jim’s demonstration that, in spite of that, XT3D doesn’t really improve things for a steeply sloping grid.  Must be something else going on.
 
-Example 1...
+Explain wormholes and how they induce horizontal flow in a sloping channel regardless of XT3D.
+\begin{itemize}
+	\item Grid with “connector cells”
+	\item Role of flows between layers
+	\item Shutting off flows between layers using extreme anisotropy in connector cells
+	\begin{itemize}
+		\item Sloping flow in connector cells
+		\item Horizontal flow in flat-top cells
+	\end{itemize}
+	\item Squashing of connector cells VO grid with horizontal flows and “wormholes”
+\end{itemize}
 
-\subsection{Example 2}
+Proposed solution is to introduce cross-connections between layers.
 
-Example 2...
+\section{Approach}
 
-\section{Summary and Conclusions}
+Summarize the overall approach here.
+
+Will use a DISV plan-view model with connector cells and XT3D to demonstrate the "wormhole" effect discussed in the Theoretical Background in the limit as connector cells are squashed out. (Also can look at the other limit, as flat-top cells are squashed and connector cells dominate, so grid follows the channel boundary.)
+
+Will use a DIS cross-sectional model to show results you get on a vertically staggered grid (without cross-connections), with and without XT3D.  (Basically what Kerry and Jim showed.)
+
+Will convert the DIS grid to a DISU grid with cross-connections and show improved results, with and without XT3D.
+
+\section{Description of Test Problems}
+
+Describe the test problem setups here.
+
+\subsection{Test problem 1 (DISV plan-view with connector cells)}
+
+Test problem 1...
+
+\subsection{Test problem 2 (DIS cross-sectional)}
+
+Test problem 2...
+
+\subsection{Test problem 3 (DISU cross-sectional with cross-connections)}
+
+Test problem 3...
+
+\section{Results and Discussion}
+
+\section{Conclusions}
 
 \section{Acknowledgments}
 Thank all those reviewers.
 
 \section{Software Availability}
 MODFLOW 6 is open source; software is developed following modern software development principles.  FloPy \citep{bakker2016scripting} contains full support for all MODFLOW 6 models and packages.  We welcome input to the community through our public software repository.  MODFLOW 6 is developed in the open, designed to be teachable, runs on multilple
+
+\section{Supporting Information}
+
+\section{Appendix}
 
 \bibliography{references.bib}
 
