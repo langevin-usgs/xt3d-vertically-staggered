@@ -1,0 +1,75 @@
+\documentclass{article}
+\usepackage{natbib}
+\usepackage[labelfont=bf]{caption}
+\usepackage{graphicx}
+\bibliographystyle{apalike}
+\usepackage{lineno}
+\linenumbers
+
+\usepackage{geometry}
+\geometry{letterpaper}
+\geometry{margin=1in}
+
+\usepackage{setspace}
+\doublespacing
+\captionsetup[figure]{font={stretch=2}}
+
+\usepackage{authblk}
+
+\newcommand{\matr}[1]{\mathbf{#1}}
+
+\title{Application of the XT3D Multi-Point Flux Approximation to Vertically Staggered Grids}
+\author{Xt3d Enthusiast1  \\
+	Some Company  \\
+	\and 
+	Xt3d Enthusiast2 \\
+	Another Company \\
+	}
+
+\date{\today}
+% Hint: \title{what ever}, \author{who care} and \date{when ever} could stand 
+% before or after the \begin{document} command 
+% BUT the \maketitle command MUST come AFTER the \begin{document} command! 
+\begin{document}
+
+\maketitle
+
+
+\begin{abstract}
+This is the best paper ever... 
+\end{abstract}
+
+\section{Introduction}
+
+Some intro stuff here about MODFLOW \citep{modflow6framework, modflow6gwf, modflow6gwt} and XT3D \citep{modflow6xt3d}...
+
+%\begin{figure}[ht]
+%	\centering
+%	\includegraphics[scale=0.6]{figures/fig1.pdf}
+%	\caption{This is the first figure.}
+%	\label{fig:firstfigure}
+%\end{figure}
+
+\section{Example}
+
+Some examples here...  
+
+\subsection{Example 1}
+
+Example 1...
+
+\subsection{Example 2}
+
+Example 2...
+
+\section{Summary and Conclusions}
+
+\section{Acknowledgments}
+Thank all those reviewers.
+
+\section{Software Availability}
+MODFLOW 6 is open source; software is developed following modern software development principles.  FloPy \citep{bakker2016scripting} contains full support for all MODFLOW 6 models and packages.  We welcome input to the community through our public software repository.  MODFLOW 6 is developed in the open, designed to be teachable, runs on multilple
+
+\bibliography{references.bib}
+
+\end{document}
