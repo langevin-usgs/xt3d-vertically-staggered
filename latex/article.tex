@@ -21,11 +21,14 @@
 \title{Application of the XT3D Multi-Point Flux Approximation to Vertically Staggered Grids \\
 	\normalsize or maybe \\
 	\LARGE Application of the XT3D Multi-Point Flux Approximation and Enhanced Grid Connectivity to Improve Accuracy of Flows in MODFLOW 6 Models With Steeply Sloping Layers}
-\author{Xt3d Enthusiast1  \\
-	Some Company  \\
+\author{
+	Xt3d Enthusiast1, Affiliation1  \\
 	\and 
-	Xt3d Enthusiast2 \\
-	Another Company \\
+	Xt3d Enthusiast2, Affiliation2 \\
+	\and 
+	Xt3d Enthusiast3, Affiliation3 \\
+	\and 
+	Xt3d Enthusiast4, Affiliation4 \\
 	}
 
 \date{\today}
@@ -43,12 +46,18 @@
 \textbf{Article impact statement:} Article impact statement ...
 
 \begin{abstract}
-This is the best paper ever... 
+This is the best paper ever...
 \end{abstract}
 
 \section{Introduction}
 
-Some intro stuff here about MODFLOW \citep{modflow6framework, modflow6gwf, modflow6gwt} and XT3D \citep{modflow6xt3d}...
+Some intro stuff here about MODFLOW \citep{modflow6framework, modflow6gwf, modflow6gwt} and XT3D \citep{modflow6xt3d}... Horizontal tops and bottoms of cells... Connection length issue...
+
+Reference and summarize VO results in \cite{bardot2022}. This is an extreme case (virtually impermeable domain surrounding the channel) that nicely accentuates the problem, but there should be some error in any application involving VO grids. Obviously expect it to be a bigger issue for greater offsets. XT3D didn't help, which was initially surprising since it takes into account connection angles and lengths. Not specifying all the angles in the NPF input would cause XT3D to default to "nozee" and therefore assume "horizontal" connections are strictly horizontal, but that was not the case in \cite{bardot2022}.
+
+We explain in this note that it's not just a connection angle and length issue, though that has an effect.  The main problem with a VO grid is insufficient hydraulic communication between grid cells in adjacent layers. (It's not restricted to layered models, but it's convenient to describe it in terms of layers.)  We propose and test a solution to the problem that involves enhanced connectivity between cells.
+
+We present three test models that demonstrate 1) how a VO grid effectively creates wormholes for flow, 2) results on an unmodified VO DIS grid, 3) results on corresponding DISU grid with enhanced connectivity. Results suggest that enhanced connectivity resolves the issue.
 
 %\begin{figure}[ht]
 %	\centering
@@ -59,11 +68,11 @@ Some intro stuff here about MODFLOW \citep{modflow6framework, modflow6gwf, modfl
 
 \section{Theoretical Background}
 
-Introduce vertically offset grids and explain the connection angle/length issue.
+Explain vertically offset (VO) grids and the connection angle/length issue in more detail than in the Intro. Discuss areas.
 
-Summarize XT3D and how it accounts for connection angle/length.  Reference Kerry and Jim’s demonstration that, in spite of that, XT3D doesn’t really improve things for a steeply sloping grid.  Must be something else going on.
+Summarize XT3D and how it accounts for connection angle/length.  Reference demonstration by \cite{bardot2022} that, in spite of that, XT3D doesn’t really improve things for a steeply sloping grid.  Must be something else going on in VO grids.
 
-Explain wormholes and how they induce horizontal flow in a sloping channel regardless of XT3D.
+Explain wormholes and how they induce horizontal flow in the sloping channel regardless of XT3D.
 \begin{itemize}
 	\item Grid with “connector cells”
 	\item Role of flows between layers
@@ -83,7 +92,7 @@ Summarize the overall approach here.
 
 Will use a DISV plan-view model with connector cells and XT3D to demonstrate the "wormhole" effect discussed in the Theoretical Background in the limit as connector cells are squashed out. (Also can look at the other limit, as flat-top cells are squashed and connector cells dominate, so grid follows the channel boundary.)
 
-Will use a DIS cross-sectional model to show results you get on a vertically staggered grid (without cross-connections), with and without XT3D.  (Basically what Kerry and Jim showed.)
+Will use a DIS cross-sectional model to show results you get on a vertically staggered grid (without cross-connections), with and without XT3D. Basically show that we can reproduce what \cite{bardot2022} found.
 
 Will convert the DIS grid to a DISU grid with cross-connections and show improved results, with and without XT3D.
 
@@ -109,9 +118,6 @@ Test problem 3...
 
 \section{Acknowledgments}
 Thank all those reviewers.
-
-\section{Software Availability}
-MODFLOW 6 is open source; software is developed following modern software development principles.  FloPy \citep{bakker2016scripting} contains full support for all MODFLOW 6 models and packages.  We welcome input to the community through our public software repository.  MODFLOW 6 is developed in the open, designed to be teachable, runs on multilple
 
 \section{Supporting Information}
 
