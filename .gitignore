@@ -27,4 +27,8 @@
 *.synctex.gz(busy)
 *.pdfsync
 
+## Executables
+*.exe
+
 python/disu_model
+python/wormholes
