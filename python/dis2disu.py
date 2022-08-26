@@ -302,19 +302,23 @@ class Dis2Disu():
                 if angldegx == 0: # right
                     cl1 = 0.5 * self.delr[j]
                     cl2 = 0.5 * self.delr[j + 1]
-                    hwva = 0.5 * self.delc[i]
+                    #hwva = 0.5 * self.delc[i]
+                    hwva = self.delc[i]
                 elif angldegx == 90.: # back
                     cl1 = 0.5 * self.delc[i]
                     cl2 = 0.5 * self.delc[i - 1]
-                    hwva = 0.5 * self.delr[j]
+                    #hwva = 0.5 * self.delr[j]
+                    hwva = self.delr[j]
                 elif angldegx == 180: # left
                     cl1 = 0.5 * self.delr[j]
                     cl2 = 0.5 * self.delr[j - 1]
-                    hwva = 0.5 * self.delc[i]
+                    #hwva = 0.5 * self.delc[i]
+                    hwva = self.delc[i]
                 elif angldegx == 270.: # front
                     cl1 = 0.5 * self.delc[i]
                     cl2 = 0.5 * self.delc[i + 1]
-                    hwva = 0.5 * self.delr[j]
+                    #hwva = 0.5 * self.delr[j]
+                    hwva = self.delr[j]
                 connection_number = self.connection_list.new_connection(nn, this_node, ihc, cl1, cl2, hwva, angldegx)
                 connected_cells.append((nn, connection_number))
         return connected_cells
