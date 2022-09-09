@@ -1,7 +1,9 @@
 \documentclass{article}
 \usepackage{natbib}
 \usepackage[labelfont=bf]{caption}
+\usepackage{subcaption}
 \usepackage{graphicx}
+\usepackage{float}
 \bibliographystyle{apalike}
 \usepackage{lineno}
 \linenumbers
@@ -18,9 +20,7 @@
 
 \newcommand{\matr}[1]{\mathbf{#1}}
 
-\title{Application of the XT3D Multi-Point Flux Approximation to Vertically Staggered Grids \\
-	\normalsize or maybe \\
-	\LARGE Application of the XT3D Multi-Point Flux Approximation and Enhanced Grid Connectivity to Improve Accuracy of Flows in MODFLOW 6 Models With Steeply Sloping Layers}
+\title{Application of the XT3D Multi-Point Flux Approximation to Vertically Staggered Grids in MODFLOW 6 to Improve Accuracy of Simulated Flows in Steeply Dipping Layers}
 \author{
 	Xt3d Enthusiast1, Affiliation1  \\
 	\and 
@@ -39,11 +39,11 @@
 
 \maketitle
 
-\textbf{Conflict of interest:} None.
+\textbf{Conflict of interest:} There is no conflict that is of interest to us.
 
-\textbf{Key words:} Key words ...
+\textbf{Key words:} keyboard, keynote, turnkey, turkey, monkey
 
-\textbf{Article impact statement:} Article impact statement ...
+\textbf{Article impact statement:} This will likely leave a sizable impact crater.
 
 \begin{abstract}
 This is the best paper ever...
@@ -53,11 +53,25 @@ This is the best paper ever...
 
 Some intro stuff here about MODFLOW \citep{modflow6framework, modflow6gwf, modflow6gwt} and XT3D \citep{modflow6xt3d}... Horizontal tops and bottoms of cells... Connection length issue...
 
+If cell-cell flows are  off, advective and dispersive transport will be off.
+
+Horizontal cell tops and bottoms - benefits.  Vertical offsets.  Drawbacks - staircase boundaries, CVFD violations.  XT3D can address connection angle and length.
+
+Having flat tops and bottoms but "distorting" the grid vertically (having vertical offsets) is discussed in \cite{modflow84} on p. 140 and fig 27, though tops and bottoms are not drawn as horizontal. Benefits cited: "minimize the number of model layers required to simulate an aquifer system" (compared to "horizontal discretization" using a "rectilinear grid"); and "each distorted cell is simulated as if it were rectangular so that flow may be approximated by the standard finite-difference equation." Note that the latter benefit extends to the case of a partially saturated cell, in which the conductance is based on the saturated thickness measured between the horizontal water table and the horizontal cell bottom. Also simplifies particle tracking, though a relative z mapping is needed when passing particles between cells.
+
+Vertical distortion is also discussed in \cite{modflow2005} and pictured with flat tops and bottoms in fig 4-2 of that report.
+
+Thought: Vertical offset happens even on a completely rectilinear grid if the water table elevation varies in horizontally adjacent cells. Doesn't seem like the same kind of issue, but think on it.
+
+Thought: What happens with a head gradient perpendicular to the dip of the channel (across rather than along the channel)? Preliminary results suggest cross-connections and xt3d help.
+
+Thought: Difference between truly single-layer model of channel vs embedded single-layer channel -- no vertical connections vs vertical connections that are no-flux. Effect on specific discharge calculations?
+
 Reference and summarize VO results in \cite{bardot2022}. This is an extreme case (virtually impermeable domain surrounding the channel) that nicely accentuates the problem, but there should be some error in any application involving VO grids. Obviously expect it to be a bigger issue for greater offsets. XT3D didn't help, which was initially surprising since it takes into account connection angles and lengths. Not specifying all the angles in the NPF input would cause XT3D to default to "nozee" and therefore assume "horizontal" connections are strictly horizontal, but that was not the case in \cite{bardot2022}.
 
 We explain in this note that it's not just a connection angle and length issue, though that has an effect.  The main problem with a VO grid is insufficient hydraulic communication between grid cells in adjacent layers. (It's not restricted to layered models, but it's convenient to describe it in terms of layers.)  We propose and test a solution to the problem that involves enhanced connectivity between cells.
 
-We present three test models that demonstrate 1) how a VO grid effectively creates wormholes for flow, 2) results on an unmodified VO DIS grid, 3) results on corresponding DISU grid with enhanced connectivity. Results suggest that enhanced connectivity resolves the issue.
+We present two test models that demonstrate 1) results on an unmodified VO DIS grid and 2) results on corresponding DISU grid with enhanced connectivity. Results suggest that enhanced connectivity resolves the issue.
 
 %\begin{figure}[ht]
 %	\centering
@@ -68,31 +82,36 @@ We present three test models that demonstrate 1) how a VO grid effectively creat
 
 \section{Theoretical Background}
 
-Explain vertically offset (VO) grids and the connection angle/length issue in more detail than in the Intro. Discuss areas.
+\begin{figure}
+	\begin{center}
+%	\includegraphics[scale=0.8]{../figures/schem_conn_area_flux.png}
+	\includegraphics[scale=0.4]{../figures/schem_conn_area_flux_resaved.png}
+	\caption{Schematics showing (a - c) grid connectivity and vertical cell interface areas and (c - f) cell interface fluxes in two-layer models of a dipping channel using three different grid configurations: (a, d) dip-following, (b, e) vertically offset, and (c, f) cross-connected. Hatching denotes impermeable boundaries along the top and bottom of the channel. In (a) - (c), gray circles and gray lines represent cell centers and grid connections between cells, respectively, and two-headed arrows indicate cell thicknesses used to compute cell interface areas. In (d) - (f), gray arrows represent specific-discharge (groundwater flux) vectors for uniform flow through the channel, and black arrows represent the corresponding components of flux normal to cell interfaces. For visual clarity, (f) shows gray arrows only for the cell interfaces that do not exist in (e).}
+	\label{fig:schem-conn-area-flux}
+	\end{center}
+\end{figure}
 
-Summarize XT3D and how it accounts for connection angle/length.  Reference demonstration by \cite{bardot2022} that, in spite of that, XT3D doesn’t really improve things for a steeply sloping grid.  Must be something else going on in VO grids.
+Figure \ref{fig:schem-conn-area-flux}a shows a group of four cells in a hypothetical model in which the dipping channel is discretized vertically into two layers of cells. Although such a configuration of cells can be constructed in plan view using the DISV grid type of MODFLOW 6, it cannot be constructed in cross-section because MODFLOW requires cells to have horizontal tops and bottoms. The sloping tops and bottoms of these hypothetical cells allow the cell geometry to conform to the dip of the channel, and we will therefore refer to this grid configuration as "dip-following." The grid connectivity is analogous to the connectivity found in a MODFLOW 6 DIS (structured, or regular) grid: a cell is hydraulically connected to each cell with which it shares a face. For example, cell 1A is connected to cells 1B and 2A, but not to cell 2B. Because cells share entire faces, i.e., adjacent cell faces overlap completely, the entire cell thickness is relevant in determining the area for flow between cells in the same layer.
 
-Explain wormholes and how they induce horizontal flow in the sloping channel regardless of XT3D.
-\begin{itemize}
-	\item Grid with “connector cells”
-	\item Role of flows between layers
-	\item Shutting off flows between layers using extreme anisotropy in connector cells
-	\begin{itemize}
-		\item Sloping flow in connector cells
-		\item Horizontal flow in flat-top cells
-	\end{itemize}
-	\item Squashing of connector cells VO grid with horizontal flows and “wormholes”
-\end{itemize}
+One would intuitively expect a dip-following grid to be well suited to simulating uniform flow along the channel. In figure \ref{fig:schem-conn-area-flux}d, a specific discharge (groundwater flux) vector representative of uniform flow along the channel is superimposed on each cell interface, together with a vector representing the component of the flux normal to the interface. The normal flux vectors show the directions in which groundwater must be able to flow between cells to accurately represent the uniform flow field. In the case of a dip-following grid, flow must simply pass from left to right between adjacent cells in the same layer (e.g., from cell 1A to cell 1B, and from cell 2A to cell 2B). There is no flow of groundwater between cells in different layers (e.g., between cells 1A and 2A, or between cells 1B and 2B). The grid connectivity shown in figure \ref{fig:schem-conn-area-flux}a is sufficient to accommodate this straighforward pattern of flows between cells; in fact, vertical connections between cells in different layers are not even needed, and the channel could be represented just as well using a single layer.
 
-Proposed solution is to introduce cross-connections between layers.
+Figure \ref{fig:schem-conn-area-flux}b shows the four cells as they would be configured for a DIS or DISV grid in a two-layer, cross-sectional MODFLOW 6 model of the channel. The cells have horizontal tops and bottoms and can therefore follow the dip of the channel only on average, in what \cite{bardot2022} refer to as "staircase" fashion, and we will refer to this grid configuration as "vertically offset." The pattern of grid connectivity is analogous to that in figure \ref{fig:schem-conn-area-flux}a, but it is not based strictly on which cell face overlap. Rather, a cell is connected to each cell in the same layer with which it has an overlapping face and with each cell in an adjacent layer with which it shares a horizontal face. Significantly, cells that have overlapping vertical faces but are in different layers (e.g., cells 1A and 2B) are not connected. In the standard and Newton-Raphson "conductance-based" formulations for flow, the flow between two cells in the same layer of a DIS or DISV grid (XXXXX or DISU that's not vertically staggered, but do we want to mention that here? XXXXX) is proportional to the difference in heads computed at the two cell centers and a conductance based on an effective hydraulic conductivity for the connection between the cells. If the two cells are fully saturated and have the same hydraulic conductivity and thickness, as in this example, the cell interface area used to calculate the conductance is effectively based on the full cell thickness, as shown in figure \ref{fig:schem-conn-area-flux}b. Also, the length on which the conductance is based is the horizontal distance, not the straight-line distance, between the cell centers.
+
+Conductance-based formulations for flow can be expected to give accurate results if the model grid satisfies a set of geometric "control-volume finite-difference (CVFD) conditions" (XXXXX; XXXXX). One of those conditions is that the straight-line connection between cell centers must be perpendicular to the cell interface. In a vertically offset grid, connections between cells across vertical cell interfaces are generally not horizontal and, therefore, not perpendicular to the interface. (XXXXX Also, in the grids considered by XXXXX, there was no partial overlap between cells faces, but do we want to get into that here? XXXXX) For example, in \ref{fig:schem-conn-area-flux}b, the nominally "horizontal" connection between cells 1A and 1B is not perpendicular to the cell interface, which compormises the accuracy of conductance-based formulations. The XT3D capability is a gradient reconstruction (interpolation) scheme introduced in MODFLOW 6 that allows simulation of fully three-dimensional anisotropy and improves the accuracy of flows between cells on grids that do not satisfy the CVFD conditions.
+
+In their dipping-channel benchmark problem, \cite{bardot2022} found that, as expected, the standard, conductance-based formulation gave poor results for a steeply ($30^{\circ}$) dipping channel. The simulated flow was not along the dip of the channel, but nearly horizontal, and the magnitude was too large. Given the ability of XT3D to compensate for grid connections that are not perpendicular to cell interfaces, rerunning the simulation with XT3D activated could have been expected to improve the flow solution substantially. However, \cite{bardot2022} obtained similarly poor results with and without XT3D. It appeared that something other than a simple violation of the CVFD perpendicularity condition was responsible, and \cite{bardot2022} noted a hypothesis suggested by two authors of the present paper (Provost and Langevin).
+
+The hypothesis can be explained with the help of figures \ref{fig:schem-conn-area-flux}b and \ref{fig:schem-conn-area-flux}e. Figure \ref{fig:schem-conn-area-flux}e shows the specific discharge vector superimposed on each cell interface of the vertically offset grid, together with a vector representing the component of the flux normal to the interface. As in the case of a dip-following grid (figure \ref{fig:schem-conn-area-flux}d), flow passes from left to right between adjacent cells in the same layer. However, unlike in the dip-following grid, there must also be vertical flow from each cell in layer 2 and to the cell immediately above it in layer 1 (e.g., from cell 2A and to cell 1A). This pattern of flow between cells obviously cannot be a solution to uniform, steady-state flow through the channel, since the exclusively upward vertical flows would deplete layer 2 and accumulate water in layer 1. Short of resorting to alternating upward and downward vertical flows, which would compromise the uniformity of the flow, the only alternative for representing uniform, steady-state flow on the vertically offset grid is to have exclusively horizontal flow. Although this concept is illustrated for a two-layer model in figure \ref{fig:schem-conn-area-flux}e, the same reasoning applies to a model of the channel with any number of layers. This explains why \cite{bardot2022} observed nearly horizontal flow in the middle portion of the channel, away from the lateral boundaries, where nearly uniform flow was established. Thus, it appears the nearly horizontal flows are not primarily due to what \cite{bardot2022} call the "cosine error" associated with the orientation and length of the sloping grid connections, but to the inability of the vertically offset grid to route flow appropriately between cells.
+
+This suggests an approach for constructing the grid to improve the accuracy of the flow solution. Figure \ref{fig:schem-conn-area-flux}c shows a grid that includes additional connections between cells in different layers compared to the grid in \ref{fig:schem-conn-area-flux}b. For example, cell 1A is connected not only cells 2A and 1B, but also the cell 2B. The grid connectivity is determined by overlap between cell faces; if two cells have faces that overlap even partially, the cells are connected across those faces. The area of the interface is the area of overlap between the cell faces. This grid configuration, which was introduced MODFLOW-USG (XXXXXXXXX) and is available for the DISU grid type in MODFLOW 6, is called "vertically staggered" and allows a cell to have nominally "horizontal" connections with more than one cell across a given cell face. In this case, vertical staggering is used to introduce "cross-connections" between cells in different layers. The ramifications of cross-connections for flow between cells are illustrated in figure \ref{fig:schem-conn-area-flux}f. Inclusion of cross-connections (e.g., between cells 1A and 2B) allows upward vertical flows from layer 2 to layer 1 (e.g., from cell 2A to cell 1A) to be routed back down to layer 2 so water does not accumulate in layer 1. The remainder of this paper describes test problems that evaluate the effectiveness of cross-connections for improving the accuracy of simulated flow though the channel.
+
+XXXXX Note: This idea is not limited to layered grids, but it's easiest to discuss in terms of layers. XXXXX
 
 \section{Approach}
 
 Summarize the overall approach here.
 
-Will use a DISV plan-view model with connector cells and XT3D to demonstrate the "wormhole" effect discussed in the Theoretical Background in the limit as connector cells are squashed out. (Also can look at the other limit, as flat-top cells are squashed and connector cells dominate, so grid follows the channel boundary.)
-
-Will use a DIS cross-sectional model to show results you get on a vertically staggered grid (without cross-connections), with and without XT3D. Basically show that we can reproduce what \cite{bardot2022} found.
+Will use a DIS grid (XXXXX converted to an equivalent DISU grid without cross=connections? XXXXX) cross-sectional model to show results you get on a vertically offset grid, with and without XT3D. Basically show that we can reproduce what \cite{bardot2022} found.
 
 Will convert the DIS grid to a DISU grid with cross-connections and show improved results, with and without XT3D.
 
@@ -100,51 +119,27 @@ Will convert the DIS grid to a DISU grid with cross-connections and show improve
 
 Describe the test problem setups here.
 
-\subsection{Test problem 1 (DISV plan-view with connector cells)}
+\subsection{Test problem 1 (DIS cross-sectional)}
 
 Test problem 1...
 
-\begin{figure}
-	\begin{center}
-	\includegraphics{../figures/worm-zzag-x-i-head.png}
-	\caption{Connector cells are conceptually useful.}
-	\label{fig:worm-zzag-x-i-head}
-	\end{center}
-\end{figure}
+XXXXX Idea: See how heterogeneity affects the error? XXXXX
 
-\begin{figure}
-	\begin{center}
-	\includegraphics{../figures/worm-smth-x-i-head.png}
-	\caption{Smooth is good.}
-	\label{fig:worm-smth-x-i-head}
-	\end{center}
-\end{figure}
-
-\begin{figure}
-	\begin{center}
-	\includegraphics{../figures/worm-sstp-x-a-head.png}
-	\caption{Wormholes are bad.}
-	\label{fig:worm-sstp-x-a-head}
-	\end{center}
-\end{figure}
-
-\subsection{Test problem 2 (DIS cross-sectional)}
+\subsection{Test problem 2 (DISU cross-sectional with cross-connections)}
 
 Test problem 2...
 
-\subsection{Test problem 3 (DISU cross-sectional with cross-connections)}
-
-Test problem 3...
-
-\begin{figure}
+\begin{figure}[H]
 	\begin{center}
-	\includegraphics{../figures/mymodel-x-cc-head.png}
-	\caption{Cross-connections are good.}
+	\includegraphics[scale=0.5]{../figures/disu-x-cc-head.png}
+	\caption{Cross-connections are good. XT3D is good.}
 	\label{fig:mymodel-head}
 	\end{center}
 \end{figure}
 
 \section{Results and Discussion}
+
+XXXXX See the temporary "preliminary results" section at the end of the manuscript XXXXX
 
 \section{Conclusions}
 
@@ -156,5 +151,101 @@ Thank all those reviewers.
 \section{Appendix}
 
 \bibliography{references.bib}
+
+\section{Oblique reference}
+
+\begin{figure}[H]
+	\includegraphics[scale=0.5]{../figures/oblique_reference.png}
+\end{figure}
+
+\section{preliminary results}
+This temporary section is a summary of preliminary results that can help provide context and guide our thinking as we construct the story.  Specific results may or may not make it into the paper.
+
+The models referenced are:
+\begin{itemize}
+	\item wormholes -- This is a plan-view, DISV model that emulates a cross-sectional model and includes "connector" cells that can have sloped tops and bottoms. Cell dimensions and hydraulic conductivities can be adjusted to approach a "dip-following" mesh (in which cell tops and bottoms follow the dip of the channel) at one extreme and a vertically offset mesh (the kind MODFLOW actually uses in cross-section) at another extreme. A vertically offset mesh is approached by making the width of the connector cells very small in the x direction and, in the case of xt3d, making them anisotropic with very high K (1000 x the base K in these runs) along the slope of the cell and very low K (0.001 x the base K) perpendicular to the slope. The case of a vertically offset mesh using the standard formulation, which cannot implement such anisotropy, was run but is not generally of interest.
+	\item crossconnected -- This is a plan-view, DISV model that emulates a cross-sectional model with "cross-connections" between model layers. This model is not in the repo, and results are noted here primarily to confirm the expected agreement with the disu\_approach model.
+	\item disu\_approach -- This implements cross-connections "for real" in a cross-sectional, DISU model. Specific discharge is recalculated in the notebook to account for overlap areas; the recent "patch" to MF6 is not being used (yet).
+	\item transect\_benchmark -- This is the vertically offset model of \cite{bardot2022} updated to allow cross-connections. Results from this model are not summarized here yet.
+\end{itemize}
+
+In the model of \cite{bardot2022} and its transect\_benchmark update, the channel is embedded in a surrounding "domain."  In each of the other three models, there is no surrounding domain -- the channel is the entire model. The distinction may be significant because the surrounding matrix provides vertical connections to the channel. When the surrounding domain is (effectively) impermeable, these vertical connections contribute "zero vertical flux" information to the specific discharge calculation, implying that the specific discharge is literally horizontal. In the absence of a surrounding domain, there is no vertical flux component information. Need to check what difference this might make.
+
+In the plan-view models, rows function as "layers." Unless stated otherwise, all results are for a 30-degree channel dip, and the analytical solution is a specific discharge of 1. inclined at 30 degrees. Total flow is the sum of the flows reported for the CHD cells along the left end of the channel. Numerical results are rounded arbitrarily. The terms "specific discharge" and "flux" are using interchangeably.
+
+\subsection{Single-layer channel}
+The channel is represented using a single layer of cells.
+
+\subsubsection{wormholes, 1x11 cells:}
+Results were the same whether the mesh was vertically offset (xt3d and standard, though not sure if standard results are meaningful) or dip-following (xt3d and standard), which is not surprising since there are no connections across the tops and bottoms. The errors in computed heads were miniscule in all cases.
+
+\paragraph{with xt3d:} Specific discharge is 0.8660 and "seemingly" horizontal. This makes sense if you consider that the only connections in the model are "horizontal" ones along the layer. A horizontal flux component of 0.8660 corresponds (via the cosine factor) to a unit flux from left to right along the dip of the channel, so in that sense it's correct. Furthermore, that's the only flux component that exists in this model, and therefore the only one xt3d can calculate; the vertical flux component is reported as zero by default. So rather than say the flux is horizontal, perhaps it's fairer to say MODFLOW gets the horizontal component right and simply can't tell us what the vertical component is. Total flow is 0.8660, which is correct.
+
+\paragraph{without xt3d (standard formulation)} Specific discharge is 1.1547 and, again, "seemingly" horizontal. This increase in magnitude relative to xt3d makes sense because the standard formulation ignores both the angle of the connection relative to the vertical cell interface and the reduction in area for flow (area perpendicular to the long axis of the channel) when the channel dips. Therefore, the  magnitude differs by a factor of $1/{(cosine factor)}^2$. Total flow is 1.1547, which reflects the error in the flux.
+
+\subsubsection{crossconnected, 1x11 cells:} Specific discharge results are essentially identical to those in the vertically offset wormholes model, which is not surprising given that there can be no cross-connections in a single-layer model. The errors in computed heads were miniscule with and without xt3d.
+
+\paragraph{with xt3d:} Total flow is 0.3660, which reflects the smaller area available for flow between two cells (the overlap area).
+
+\paragraph{without xt3d (standard formulation)} Total flow is 0.4880, which (given the incorrect flux) also reflects the smaller area available for flow between two cells (the overlap area).
+
+\subsubsection{disu\_approach, 1x11 cells:} Specific discharge results are essentially identical to those in the vertically offset wormholes model and crossconnected model. Total flow matched either the vertically offset wormholes result or the crossconnected result depending on how the "staggered" flag was set in the notebook, which determined whether the specific discharge remained based on average areas or was recalculated using overlap areas. (There are no cross-connections in a single-layer model, so the cell-cell flows were unaffected, so it was just a matter of whether the fluxes were postprocessed to adjust the areas.) The errors in computed heads were miniscule with and without xt3d.
+
+\subsection{Two-layer channel}
+The channel is represented using two layers of cells. This introduces the possibility of vertical flows between layers.
+
+\subsubsection{wormholes, 2x11 cells}
+
+\paragraph{dip-following mesh with xt3d:} In the connector cells (which are of primary interest in this case), specific discharge is 0.9998 mid-channel and 1.00003 on average, with a max error of +0.0003. Angle of specific discharge is 29.9913 deg mid-channel and 29.9879 on average, with a max error of +0.03 deg. Errors in computed heads (including all cells) are on the order of 0.002\%. Total flow is 1.7321 (0.8661 per cell). So, good agreement with the analytical solution.
+
+\paragraph{dip-following mesh without xt3d (standard formulation)} In the connector cells (which are of primary interest in this case), specific discharge is 1.3336 mid-channel and 1.3687 on average, with a max error of +0.69. Angle of specific discharge is 30.05 deg mid-channel and 32.24 on average, with a max error of +9.8 deg. Errors in computed heads (including all cells) are on the order of 2\%. Total flow is 2.3094 (1.1547 per cell).
+
+\paragraph{vertically offset mesh with xt3d:} In the flat-top cells (which are of primary interest in this case), specific discharge is 1.1117 mid-channel and 1.1211 on average, with a max error of +0.35. Angle of specific discharge is -0.53 deg mid-channel and 6.0095 on average, with a max error of -30.54 deg; the flow generally skews toward horizontal. Errors in computed heads (including all cells) are on the order of 4\%. Total flow is 2.1993 (1.0997 per cell).
+
+\subsubsection{crossconnected, 2x11 cells:}
+
+\paragraph{with xt3d:} Specific discharge matches the analytical solution very closely, with a max error of -5e-9. Angle of specific discharge also matches very closely, with a max error of -9e-8 deg. Errors in computed heads are minscule. Total flow is 1.2321 (0.6161 per cell), which reflects the reduced area for flow; the non-overlapping area of the lowest left-hand boundary cell is effectively "lost." Otherwise, a great result.
+
+\paragraph{without xt3d (standard formulation)}  Specific discharge is 1.0922 mid-channel and 1.1074 on average, with a max error of +0.30. Angle of specific discharge is 22.69 deg mid-channel and 23.28 on average, with a max error of -7.5 deg. Errors in computed heads are on the order of 0.5\%. Total flow is 1.3942 (0.6971 per cell). Overall, not a great result, but not terrible; the cross-connections alone seem to have helped substantially.
+
+\subsubsection{disu\_approach, 2x11 cells:}
+
+\paragraph{without cross-connections, with xt3d:} Results are comparable to those in the wormhole model with a vertically offset mesh and xt3d. Specific discharge is 1.1045 mid-channel and 1.1262 on average, with a max error of +0.38. Angle of specific discharge is 0.0731 deg mid-channel and 6.2516 on average, with a max error of -29.93 deg; the flow generally skews toward horizontal. Errors in computed heads are on the order of 3\%. Total flow is 2.2091 (1.1045 per cell).
+
+\paragraph{without cross-connections, without xt3d (standard formulation):} Specific discharge is 1.1547 mid-channel and 1.1755 on average, with a max error of +0.43. Angle of specific discharge is 0.0685 deg mid-channel and 5.9963 on average, with a max error of -29.93 deg; the flow generally skews toward horizontal. Errors in computed heads (including all cells) are on the order of 2\%. Total flow is 2.3094 (1.1547 per cell). Overall, comparable to the results with xt3d.
+
+\paragraph{with cross-connections, with xt3d:} Results are comparable to those in the crossconnected model with xt3d. Specific discharge matches the analytical solution very closely, with a max error of +1e-8. Angle of specific discharge also matches very closely, with a max error of -3e-7 deg. Errors in computed heads are minscule. Total flow is 1.2321 (0.6161 per cell), which reflects the reduced area for flow; the non-overlapping area of the lowest left-hand boundary cell is effectively "lost." Otherwise, a great result.
+
+\paragraph{with cross-connections, without xt3d (standard formulation):} Results are comparable to those in the crossconnected model without xt3d. Specific discharge is 1.0948 mid-channel and 1.1101 on average, with a max error of +0.30. Angle of specific discharge is 22.63 deg mid-channel and 23.22 on average, with a max error of -7.5 deg. Errors in computed heads are on the order of 0.5\%. Total flow is 1.3942 (0.6971 per cell). Overall, not a great result, but not terrible; the cross-connections alone seem to have helped substantially.
+
+\subsection{Five-layer channel}
+The channel is represented using five layers of cells.
+
+\subsubsection{wormholes, 5x11 cells:}
+
+\paragraph{dip-following mesh with xt3d:} Results are basically similar to those in the 2-layer case, except the total flow is greater in proportion to the greater number of boundary cells.
+
+\paragraph{dip-following mesh without xt3d (standard formulation)} Results are roughly comparable to but a bit worse overall than those in the 2-layer case. In the connector cells (which are of primary interest in this case), specific discharge is 1.3579 mid-channel and 1.4277 on average, with a max error of +1.14. Angle of specific discharge is 31.7497 deg mid-channel and 35.6924 on average, with a max error of +19.57 deg. Errors in computed heads (including all cells) are on the order of 8\%. Total flow is 5.7735 (1.1547 per cell). 
+
+\paragraph{vertically offset mesh with xt3d:} Results are roughly comparable to those in the 2-layer case. In the flat-top cells (which are of primary interest in this case), specific discharge is 0.8906 mid-channel and 1.0013 on average, with a max error of +0.54. Angle of specific discharge is 2.8558 deg mid-channel and 10.9171 on average, with a max error of -31.5 deg; the flow generally skews toward horizontal. Errors in computed heads (including all cells) are on the order of 10\%. Total flow is 4.8426 (0.9685 per cell).
+
+\subsubsection{crossconnected, 5x11 cells:}
+
+\paragraph{with xt3d:} Results are basically similar to those in the 2-layer case. Total flow is 3.8301 (0.7660 per cell), which is better than the 2-layer result due to the "lost" (non-overlapping) area being a smaller proportion of the total area for flow.
+
+\paragraph{without xt3d (standard formulation)}  Results are basically comparable to those in the 2-layer case, except the errors in computed heads are substantially higher at around 1.5\%, and the total flow of 4.0944 gives a somewhat higher flow per cell at 0.8189. Again, not great, but not terrible.
+
+\subsubsection{disu\_approach, 5x11 cells:}
+
+\paragraph{without cross-connections, with xt3d:} Results are roughly comparable to but a bit worse overall than those in the 2-layer case. Specific discharge is 1.0547 mid-channel and 1.0926 on average, with a max error of +0.62. Angle of specific discharge is 2.9627 deg mid-channel and 10.3771 on average, with a max error of -28.1 deg; the flow generally skews toward horizontal. Errors in computed heads are on the order of 8\%. Total flow is 5.3106 (1.0621 per cell).
+
+\paragraph{without cross-connections, without xt3d (standard formulation):} Results are roughly comparable to but a bit worse overall than those in the 2-layer case. Specific discharge is 1.1560 mid-channel and 1.1827 on average, with a max error of +0.70. Angle of specific discharge is 2.7571 deg mid-channel and 9.5527 on average, with a max error of -28.3 deg; the flow generally skews toward horizontal. Errors in computed heads (including all cells) are on the order of 8\%. Total flow is 5.7735 (1.1547 per cell). Overall, comparable to the results with xt3d.
+
+\paragraph{with cross-connections, with xt3d:} Results are basically similar to those in the 2-layer case. Total flow is 3.8301 (0.7660 per cell), which is better than the 2-layer result due to the "lost" (non-overlapping) area being a smaller proportion of the total area for flow.
+
+\paragraph{with cross-connections, without xt3d (standard formulation):} Results are comparable to those in the crossconnected model without xt3d. Again, not great, but not terrible.
+
+\subsection{Crossflow}
+What happens if the flow is across the channel rather than along it? Added scenarios to the disu\_approach notebook to simulate this. Haven't analyzed the results in detail, but using cross-connections together with xt3d appears to help in this case, as well. 
 
 \end{document}
