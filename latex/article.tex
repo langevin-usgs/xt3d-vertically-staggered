@@ -88,7 +88,7 @@ Figure \ref{fig:schem-conn-area-flux}a shows a group of four cells in a hypothet
 
 One would intuitively expect a dip-following grid to be well suited to simulating uniform flow along the channel. In figure \ref{fig:schem-conn-area-flux}d, a specific discharge (groundwater flux) vector representative of uniform flow along the channel is superimposed on each cell interface, together with a vector representing the component of the flux normal to the interface. The normal flux vectors show the directions in which groundwater must be able to flow between cells to accurately represent the uniform flow field. In the case of a dip-following grid, flow must simply pass from left to right between adjacent cells in the same layer (e.g., from cell 1A to cell 1B, and from cell 2A to cell 2B). There is no flow of groundwater between cells in different layers (e.g., between cells 1A and 2A, or between cells 1B and 2B). The grid connectivity shown in figure \ref{fig:schem-conn-area-flux}a is sufficient to accommodate this straighforward pattern of flows between cells; in fact, vertical connections between cells in different layers are not even needed, and the channel could be represented just as well using a single layer.
 
-Figure \ref{fig:schem-conn-area-flux}b shows the four cells as they would be configured for a vertically offset DIS or DISV grid in a two-layer, cross-sectional MODFLOW 6 model of the channel. The cells have horizontal tops and bottoms and can therefore follow the dip of the channel only on average, in what \cite{bardot2022} refer to as ``staircase" fashion. The pattern of grid connectivity is analogous to that in figure \ref{fig:schem-conn-area-flux}a, but it is not based strictly on which cell face overlap. Rather, a cell is connected to each cell in the same layer with which it has an overlapping face and with each cell in an adjacent layer with which it shares a horizontal face. Significantly, cells that have overlapping vertical faces but are in different layers (e.g., cells 1A and 2B) are not connected. In the conductance-based formulation for flow, the flow between two cells in the same layer of a DIS or DISV grid (XXXXX or DISU that's not vertically staggered, but do we want to mention that here? XXXXX) is proportional to the difference in heads computed at the two cell centers and a conductance based on an effective hydraulic conductivity for the connection between the cells. If the two cells are fully saturated and have the same hydraulic conductivity and thickness, as in this example, the cell interface area used to calculate the conductance is effectively based on the full cell thickness, as shown in figure \ref{fig:schem-conn-area-flux}b. Also, the length on which the conductance is based is the horizontal distance, not the straight-line distance, between the cell centers.
+Figure \ref{fig:schem-conn-area-flux}b shows the four cells as they would be configured for a vertically offset DIS or DISV grid in a two-layer, cross-sectional MODFLOW 6 model of the channel. The cells have horizontal tops and bottoms and can therefore follow the dip of the channel only on average, in what \cite{bardot2022} refer to as ``staircase" fashion. The pattern of grid connectivity is analogous to that in figure \ref{fig:schem-conn-area-flux}a, but it is not based strictly on which cell faces overlap. Rather, a cell is connected to each cell in the same layer with which it has an overlapping face and with each cell in an adjacent layer with which it shares a horizontal face. Significantly, cells that have overlapping vertical faces but are in different layers (e.g., cells 1A and 2B) are not connected. In the conductance-based formulation for flow, the flow between two cells in the same layer of a DIS or DISV grid (XXXXX or DISU that's not vertically staggered, but do we want to mention that here? XXXXX) is proportional to the difference in heads computed at the two cell centers and a conductance based on an effective hydraulic conductivity for the connection between the cells. If the two cells are fully saturated and have the same hydraulic conductivity and thickness, as in this example, the cell interface area used to calculate the conductance is effectively based on the full cell thickness, as shown in figure \ref{fig:schem-conn-area-flux}b. Also, the length on which the conductance is based is the horizontal distance, not the straight-line distance, between the cell centers.
 
 As mentioned earlier, for the conductance-based flow formulation to provide maximum accuracy, the model grid must satisfy the CVFD requirement that the straight-line connection between two cell centers must intersect the midpoint of the cell interface at a right angle. In a vertically offset grid, connections between cells across vertical cell interfaces are generally not horizontal and, therefore, not perpendicular to the interface. For example, in \ref{fig:schem-conn-area-flux}b, the nominally ``horizontal" connection between cells 1A and 1B is not perpendicular to the cell interface, which compromises the accuracy of conductance-based formulations.  (XXXXX Also, in the grids considered by \cite{narasimhan1976integrated}, there was no partial overlap between cells faces, but do we want to get into that here? XXXXX)
 
@@ -118,7 +118,7 @@ which represents a unit head gradient perpendicular to the long axis of the chan
 
 Simulations are performed using variations on two test problems that differ in their method of discretization. The first test problem uses the traditional approach of representing the inclined channel using a vertically offset grid of the MODFLOW 6 DIS (structured) type. (XXXXX To be decided: present results for the DIS grid, or for the equivalent of the DIS grid after conversion to DISU? XXXXX) This problem confirms the findings of \cite{bardot2022} and illustrates the limitations of the vertically offset grid approach. The second test problem is similar to the first but uses a vertically staggered grid of MODFLOW 6 DISU (unstructured) type. The second problem is designed to evaluate the effectiveness of cross-connections between layers (illustrated in figure \ref{fig:schem-conn-area-flux}c) in improving the accuracy of the flow solution, both with and without XT3D. Variations on both test problems are described in the ``Results and Discussion" section.
 
-XXXXX Describe conversion XXXXX
+Jupyter notebooks for both test problems are available in the Supporting Information that accompanies this paper. The notebooks leverage the capabilities of FloPy \citep{bakker2016scripting} to assist in setting up input for and processing results from the MODFLOW 6 simulations. The second test problem is formulated by starting with a DIS grid, converting it to an equivalent DISU grid, and adding cross-connections. A Python script for converting and modifying the grid is included.
 
 \section{Results and Discussion}
 
@@ -126,16 +126,76 @@ XXXXX See the temporary ``preliminary results" section at the end of the manuscr
 
 \subsection{Test Problem 1: Vertically Offset Discretization}
 
-XXXXX Idea: See how heterogeneity affects the error -- series of runs with varying permeability contrast between channel and surrounding domain (from 1:1 to very large), producing a plot along the lines of figs. 3d and 4d in \cite{bardot2022} XXXXX
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-s-nocc-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-nocc-head}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-x-nocc-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-nocc-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically offset grid. The news is all bad; XT3D doesn't really help. (disu\_approach model, 5x11 grid without cross-connections, $30^{\circ}$ incline, set up for flow along the channel)}
+\label{fig:figures}
+\end{figure}
+
+XXXXX Idea: See how heterogeneity affects the error -- series of runs with varying permeability contrast between channel and surrounding domain (from 1:1 to very large), producing a plot along the lines of figs. 3d and 4d in \cite{bardot2022}. Will need to use the transect\_benchmark model for this, as we probably should for all of the final simulations. XXXXX
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-s-nocc-cf-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-nocc-cf-head.}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-x-nocc-cf-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-nocc-cf-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically offset grid and boundary heads set up for crossflow. The standard formulation is a fail, but XT3D nails it, even without cross-connections. (disu\_approach model, 5x11 grid without cross-connections, $30^{\circ}$ incline, set up for flow across the channel)}
+\label{fig:figures}
+\end{figure}
 
 \subsection{Test Problem 2: Vertically Staggered Discretization}
 
 \begin{figure}[H]
-	\begin{center}
-	\includegraphics[scale=0.5]{../figures/disu-x-cc-head.png}
-	\caption{Cross-connections are good. XT3D is good.}
-	\label{fig:mymodel-head}
-	\end{center}
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-s-cc-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-cc-head}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-x-cc-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-cc-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically staggered grid with cross-connections. The news is much better; the standard formulation isn't horrible, and XT3D nails it. (disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow along the channel)}
+\label{fig:figures}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-s-cc-cf-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-cc-cf-head}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-x-cc-cf-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-cc-cf-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically staggered grid with cross-connections and boundary heads set up for crossflow. The standard formulation does pretty well, and XT3D nails it again. (disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow across the channel)}
+\label{fig:figures}
 \end{figure}
 
 XXXXX The concepts in this paper have been easiest to discuss in terms of layers, but they're not limited to layered grids. XXXXX
