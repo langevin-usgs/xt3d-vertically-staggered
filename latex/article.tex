@@ -69,6 +69,7 @@ XXXXX Random thoughts:
 \begin{itemize}
 	\item Vertical offset happens even on a completely rectilinear grid if the water table elevation varies in horizontally adjacent cells. Doesn't seem like the same kind of issue, but think on it.
 	\item What happens with a head gradient perpendicular to the dip of the channel (across rather than along the channel)? Preliminary results suggest cross-connections and xt3d help.
+	\item Could also try making the channel less permeable than the domain; semi-confining unit.
 	\item Difference between truly single-layer model of channel vs embedded single-layer channel -- no vertical connections vs vertical connections that are no-flux. Effect on specific discharge calculations?
 \end{itemize}
 
@@ -113,7 +114,7 @@ h = - x \cos \theta - z \sin \theta.
 \label{eqn:head_analyt_across}
 h = x \sin \theta - z \cos \theta,
 \end{equation}
-which represents a unit head gradient perpendicular to the long axis of the channel. In both cases, the hydraulic conductivity of the channel is set to 1 m/d (meter per day) so that the analytical flow solution is a groundwater flux of 1 m/d either along or across the channel. The conductivity of the domain surrounding the channel varies according to the scenario being investigated. In the homogeneous limit, the conductivity of the domain is set equal to that of the channel. In the highly heterogeneous limit, the conductivity of the domain is set much lower than that of the channel to effectively isolate the channel hydraulically.
+which represents a unit head gradient perpendicular to the long axis of the channel. In both cases, the hydraulic conductivity of the channel is set to 1 m/d (meter per day) so that the analytical flow solution is a groundwater flux of 1 m/d either along or across the channel. The conductivity of the domain surrounding the channel varies according to the scenario being investigated. In the homogeneous limit, the conductivity of the domain is set equal to that of the channel. In the highly heterogeneous limit, the conductivity of the domain is set much lower than that of the channel to effectively isolate the channel hydraulically. XXXXX Could also try making the channel less permeable than the domain; semi-confining unit XXXXX
 
 Simulations are performed using variations on two test problems that differ in their method of discretization. The first test problem uses the traditional approach of representing the inclined channel using a vertically offset grid of the MODFLOW 6 DIS (structured) type. (XXXXX To be decided: present results for the DIS grid, or for the equivalent of the DIS grid after conversion to DISU? XXXXX) This problem confirms the findings of \cite{bardot2022} and illustrates the limitations of the vertically offset grid approach. The second test problem is similar to the first but uses a vertically staggered grid of MODFLOW 6 DISU (unstructured) type. The second problem is designed to evaluate the effectiveness of cross-connections between layers (illustrated in figure \ref{fig:schem-conn-area-flux}c) in improving the accuracy of the flow solution, both with and without XT3D. Variations on both test problems are described in the ``Results and Discussion" section.
 
