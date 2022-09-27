@@ -124,6 +124,8 @@ Jupyter notebooks for both test problems are available in the Supporting Informa
 
 XXXXX See the temporary ``preliminary results" section at the end of the manuscript XXXXX
 
+XXXXX Results without the domain are presented first to "cleanly" illustrate the main problem and its solution. Results with the domain are then presented to give more of an indication of how things might work in practice. Unless stated otherwise, the domain is 6 orders of magnitude less conductive than the channel, as in \cite{bardot2022}. XXXXX
+
 \subsection{Test Problem 1: Vertically Offset Discretization}
 
 \begin{figure}[H]
@@ -139,11 +141,9 @@ XXXXX See the temporary ``preliminary results" section at the end of the manuscr
 	\caption{XT3D}
 	\label{fig:disu-x-nocc-head}
 \end{subfigure}
-\caption{Specific discharge and head for a vertically offset grid. The news is all bad; XT3D doesn't really help. (preliminary result from disu\_approach model, 5x11 grid without cross-connections, $30^{\circ}$ incline, set up for flow along the channel)}
+\caption{Specific discharge and head for a vertically offset grid. As Kerry and Jim found previously, the news is all bad; the flow tends to go horizontal, and XT3D doesn't really help. (preliminary result from disu\_approach model, 5x11 grid without cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-af-vo-s and disu-af-vo-x)}
 \label{fig:figures}
 \end{figure}
-
-XXXXX Idea: See how heterogeneity affects the error -- series of runs with varying permeability contrast between channel and surrounding domain (from 1:1 to very large), producing a plot along the lines of figs. 3d and 4d in \cite{bardot2022}. Will need to use the transect\_benchmark model for this, as we probably should for all of the final simulations. XXXXX
 
 \begin{figure}[H]
 \centering
@@ -158,7 +158,7 @@ XXXXX Idea: See how heterogeneity affects the error -- series of runs with varyi
 	\caption{XT3D}
 	\label{fig:disu-x-nocc-cf-head}
 \end{subfigure}
-\caption{Specific discharge and head for a vertically offset grid and boundary heads set up for crossflow. The standard formulation is a fail, but XT3D nails it, even without cross-connections. (preliminary result from disu\_approach model, 5x11 grid without cross-connections, $30^{\circ}$ incline, set up for flow across the channel)}
+\caption{Specific discharge and head for a vertically offset grid and boundary heads set up for crossflow. The standard formulation is a fail, but XT3D nails it, even without cross-connections. (preliminary result from disu\_approach model, 5x11 grid without cross-connections, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-cf-vo-s and disu-cf-vo-x)}
 \label{fig:figures}
 \end{figure}
 
@@ -177,7 +177,7 @@ XXXXX Idea: See how heterogeneity affects the error -- series of runs with varyi
 	\caption{XT3D}
 	\label{fig:disu-x-cc-head}
 \end{subfigure}
-\caption{Specific discharge and head for a vertically staggered grid with cross-connections. The news is much better; the standard formulation isn't horrible, and XT3D nails it. (preliminary result from disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow along the channel)}
+\caption{Specific discharge and head for a vertically staggered grid with cross-connections. The news is much better; the standard formulation is much improved, and XT3D nails it. (preliminary result from disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-af-vs-s and disu-af-vs-x)}
 \label{fig:figures}
 \end{figure}
 
@@ -194,7 +194,81 @@ XXXXX Idea: See how heterogeneity affects the error -- series of runs with varyi
 	\caption{XT3D}
 	\label{fig:disu-x-cc-cf-head}
 \end{subfigure}
-\caption{Specific discharge and head for a vertically staggered grid with cross-connections and boundary heads set up for crossflow. The standard formulation does pretty well, and XT3D nails it again. (preliminary result from disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow across the channel)}
+\caption{Specific discharge and head for a vertically staggered grid with cross-connections and boundary heads set up for crossflow. The standard formulation does pretty well, and XT3D nails it. (preliminary result from disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-cf-vs-s and disu-cf-vs-x)}
+\label{fig:figures}
+\end{figure}
+
+\subsection{Test Problem 3: Vertically Offset Discretization with Domain}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-af-vo-s-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-nocc-head}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-af-vo-x-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-nocc-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically offset grid with the domain. Results are similar to those without the domain and consistent with what Kerry and Jim found previously; the flow tends to go horizontal, and XT3D doesn't really help. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, without cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-d-af-vo-s and disu-d-af-vo-x)}
+\label{fig:figures}
+\end{figure}
+
+XXXXX Idea: See how heterogeneity affects the error -- series of runs with varying permeability contrast between channel and surrounding domain (from 1:1 to very large), producing a plot along the lines of figs. 3d and 4d in \cite{bardot2022}. Will need to use the transect\_benchmark model for this, as we probably should for all of the final simulations. XXXXX
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vo-s-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-nocc-cf-head.}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vo-x-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-nocc-cf-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically offset grid with the domain and boundary heads set up for crossflow. The standard formulation gives nearly vertical flow in the channel, and XT3D also does poorly, even mid-channel. The huge specific discharge vectors near the channel boundary are apparently caused by XT3D's head-gradient interpolation drawing heads from the domain, where the head gradient is huge, when computing nominally horizontal flows between cells within the channel. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, without cross-connections, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-d-cf-vo-s and disu-d-cf-vo-x)}
+\label{fig:figures}
+\end{figure}
+
+\subsection{Test Problem 4: Vertically Staggered Discretization with Domain}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-af-vs-s-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-cc-head}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-af-vs-x-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-cc-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically staggered grid with the domain and with cross-connections. The standard formulation isn't horrible, and XT3D does very well except at the channel boundary, where there's presumably a "staircase" effect. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, with cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-d-af-vs-s and disu-d-af-vs-x)}
+\label{fig:figures}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vs-s-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-cc-cf-head}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vs-x-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-cc-cf-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically staggered grid with the domain and with cross-connections and boundary heads set up for crossflow. The standard formulation is much improved. You can't tell because of the scale of the vectors, but XT3D does well mid-channel. However, near the channel boundary it still has huge flows due to interpolating heads from the domain. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-d-cf-vs-s and disu-d-cf-vs-x)}
 \label{fig:figures}
 \end{figure}
 
@@ -308,6 +382,6 @@ The channel is represented using five layers of cells.
 What happens if the flow is across the channel rather than along it? Added scenarios to the disu\_approach notebook to simulate this. Haven't analyzed the results in detail, but using cross-connections together with xt3d appears to help in this case, as well.
 
 \subsection{Domain}
-Results with the surrounding "domain" (from an updated disu\_approach notebook) are similar but not identical, apparently due to the "staircase" effect. Might be best to presnt most of our results without the domain, at least when illustrating the main problem and its solution (to keep the "theory" clear), then discuss what happens when the domain is present (which is more like in practice).
+Results with the surrounding "domain" (from an updated disu\_approach notebook) are similar but not identical, apparently due to the "staircase" effect. Might be best to present most of our results without the domain, at least when illustrating the main problem and its solution (to keep the "theory" clear), then discuss what happens when the domain is present (which is more like in practice).
 
 \end{document}
