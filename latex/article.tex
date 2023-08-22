@@ -17,19 +17,21 @@
 \captionsetup[figure]{font={stretch=2}}
 
 \usepackage{authblk}
+\usepackage{xcolor}
 
 \newcommand{\matr}[1]{\mathbf{#1}}
 
-\title{Application of the XT3D Multi-Point Flux Approximation to Vertically Staggered Grids in MODFLOW 6 to Improve Accuracy of Simulated Flows in Steeply Dipping Layers}
+\title{Improving Accuracy of Simulated Flows in Steeply Dipping Layers Using Vertically Staggered Grids with the XT3D Multi-Point Flux Approximation in MODFLOW 6}
 \author{
-	Xt3d Enthusiast1, Affiliation1  \\
+	Alden M. Provost, U.S. Geological Survey, Integrated Modeling and Prediction Division, U.S. Geological Survey, 12201 Sunrise Valley Dr, Reston, VA, USA  \\
 	\and 
-	Xt3d Enthusiast2, Affiliation2 \\
+	Kerry Bardot, School of Earth Sciences, University of Western Australia, Perth, Australia \\
 	\and 
-	Xt3d Enthusiast3, Affiliation3 \\
+	Christian D. Langevin, U.S. Geological Survey, Integrated Modeling and Prediction Division, 2280 Woodale Drive, Mounds View, MN, USA \\
 	\and 
-	Xt3d Enthusiast4, Affiliation4 \\
+	James L. McCallum, School of Earth Sciences, University of Western Australia, Perth, Australia \\
 	}
+
 
 \date{\today}
 
@@ -37,94 +39,106 @@
 
 \maketitle
 
-\textbf{Conflict of interest:} There is no conflict that is of interest to us.
+\textbf{Conflict of interest:} None.
 
-\textbf{Key words:} keyboard, keynote, turnkey, turkey, monkey
+\textbf{Key words:} groundwater flow simulation, dipping model layers, vertically staggered grid, multi-point flux approximation
 
-\textbf{Article impact statement:} This will likely leave a sizable impact crater.
+\textbf{Article impact statement:} {\color{red} AMP: Need impact statement}
 
 \begin{abstract}
-This is the best paper ever...
+\noindent {\color{red} AMP: compose Abstract near the end}
 \end{abstract}
 
 \section{Introduction}
 
-Some intro stuff here about MODFLOW \citep{modflow6framework, modflow6gwf, modflow6gwt}...
+In the MODFLOW family of hydrologic simulation codes, a groundwater model domain is discretized into a grid of hydraulically connected model cells. Versions of MODFLOW up to and including MODFLOW-2005 \citep{modflow2005} offered only structured grids composed of rows, columns, and layers of cells. Cells were conceptualized as having horizontal top and bottom surfaces, which allowed each cell to be ``simulated as if it were rectangular so that flow may be approximated by the standard finite-difference equation" \citep{modflow84}. In MODFLOW-USG \citep{modflowusg} and MODFLOW 6 \citep{modflow6gwf}, which offer unstructured grids and use the control-volume finite-difference method to formulate the discrete balance equations, cells continue to have horizontal tops and bottoms, which simplifies the definition and calculation of water-table elevations, cell saturations, and hydraulic conductances between cells.
 
-XXXXX If cell-cell flows are inaccurate, advective and dispersive transport will be inaccurate XXXXX
+A traditional approach to representing an aquifer system with dipping hydrogeologic layers in MODFLOW is to map the hydrologic properties onto a rectilinear grid \citep{modflow84}. Another approach available in all versions of MODFLOW is to allow the top and bottom elevations of cells in the same layer of the grid to vary spatially. Following \cite{bardot2022}, in this work we call this type of grid ``vertically offset." The vertical offsets between ``horizontally" adjacent cells allows model layers to ``deform'" with the hydrostratigraphy to ``minimize the number of model layers required to simulate an aquifer system" \citep{modflow84} relative to a rectilinear grid with horizontal layers. In both approaches, the model grid follows the boundaries of dipping layers approximately, in what \cite{bardot2022} call a ``staircase" fashion.
 
-MODFLOW requires model cells to have horizontal tops and bottoms. In versions of MODFLOW up to and including MODFLOW-2005 \citep{modflow2005}, which offered only structured grids composed of rows, columns and layers of cells, a horizontal top and bottom allowed each cell to be ``simulated as if it were rectangular so that flow may be approximated by the standard finite-difference equation" \citep{modflow84}. In MODFLOW-USG \citep{modflowusg} and MODFLOW 6 \citep{modflow6gwf}, which offer unstructured grids and use the control-volume finite-difference method to formulate the discrete balance equations, horizontal cell tops and bottoms still simplify the definition and calculation of water-table elevations, cell saturations, and conductances between cells. In all versions of MODFLOW, cells in the same model layer can be vertically offset from each other to allow model layers to ``deform'" with the hydrostratigraphy and thereby ``minimize the number of model layers required to simulate an aquifer system" \citep{modflow84} relative to a rectilinear grid with strictly horizontal layers.
+All versions of MODFLOW prior to MODFLOW 6 used a two-point, ``conductance-based" flow formulation in which the flow between two adjacent cells is proportional to the difference between the heads calculated in those two cells. The conductance-based flow formulation is most accurate when the grid satisfies the ``control-volume finite-difference (CVFD) requirement" that the straight-line connection between two cell centers must intersect the midpoint of the cell interface at a right angle \citep{narasimhan1976integrated}. However, vertically offset grids violate the CVFD requirement because cell interfaces are vertical but cell connections are not strictly horizontal. For this reason, the MODFLOW 6 documentation \citep{modflow6gwf} warns that "[s]teeply dipping layers generally should not be represented" using vertical offsets. \cite{anderson2015applied} recommend a $10^{\circ}$ dip as a practical upper limit for using vertical offsets.
 
-Prior to MODFLOW 6, all versions of MODFLOW used a ``conductance-based" formulation to approximate the flow between two adjacent cells. The conductance-based formulation is a ``two-point" approximation in which the flow is proportional to the difference in the heads computed at the two cell centers and a conductance that depends on the hydraulic conductivities of the cells along the direction of the cell connection, the area of the cell interface, and a measure of the distance between the cell centers. On structured MODFLOW grids with no vertical offset between cells, i.e., strictly rectilinear grids, with hydraulic conductivity that is isotropic or has anisotropy aligned with the three mutually perpendicular grid directions, the conductance-based formulation is second-order accurate \citep{dehotin2010modeling, modflow6gwf}. This is because structured MODFLOW grids with no vertical offset satisfy the ``control-volume finite-difference (CVFD) requirement" that the straight-line connection between two cell centers must intersect the midpoint of the cell interface at a right angle \citep{narasimhan1976integrated}. Structured MODFLOW grids with vertical offset between cells, which we will call "vertically offset" grids, violate the CFVD requirement because nominally "horizontal" connections between cell centers in the same layer are not strictly horizontal and therefore not perpendicular to the vertical cell interfaces they intersect. (XXXXX Also, in the grids considered by \cite{narasimhan1976integrated}, there was no partial overlap between cells faces, but is that relevant, and do we want to get into that? XXXXX) The accuracy of the conductance-based flow formulation decreases with increasing vertical offset. For this reason, the MODFLOW 6 documentation \citep{modflow6gwf} warns that "[s]teeply dipping layers generally should not be represented" using vertical offsets. \cite{anderson2015applied} recommend a $10^{\circ}$ dip as a practical upper limit for using vertical offsets. A traditional alternative to using a vertically offset grid is to map the hydrologic properties of the aquifer system onto a strictly rectilinear grid, which typically requires more model layers to adequately discretize dipping hydrostratigraphic units \citep{modflow84}.
+To improve the accuracy of flow simulations on unstructured grids, and to allow accurate simulation of arbitrarily oriented two- or three-dimensional anisotropy, the optional XT3D flow formulation \citep{modflow6xt3d} was introduced in MODFLOW 6. By performing flow calculations using Darcy's Law in its tensorial form based on a multi-point approximation of the head gradient vector, XT3D accounts for both arbitrarily oriented anisotropy and geometric irregularity of the grid. In theory, XT3D should be able to compensate for the geometic irregularity introduced by vertical offsets between adjacent cells in the same model layer.
 
-The ability to use unstructured, or ``irregular," grids in MODFLOW-USG and MODFLOW 6 introduced the potential for grids to violate the CVFD requirement and thereby render the conductance-based formulation less accurate even in the absence of vertical offsets. To improve accuracy on irregular grids, and to allow accurate simulation of arbitrarily oriented two- or three-dimensional anisotropy, the optional XT3D flow formulation \citep{modflow6xt3d} was introduced in MODFLOW 6. XT3D formulates the flow between two cells by interpolating head values from the two cells and their neighboring cells to construct an estimate of the full, two- or three-dimensional head-gradient vector on each side of the cell interface; applying the cell conductivity tensors to obtain an estimate of the groundwater flux vector on each side of the interface; and reconciling the two flux estimates to ensure continuity of flow across the interface. By performing flow calculations using Darcy's Law in its tensorial form, based on a ``multi-point" approximation of the head gradient, XT3D accounts for both arbitrarily oriented anisotropy and geometric irregularity of the grid.
+\cite{bardot2022} evaluated the effects of grid design and XT3D on the ability of MODFLOW 6 to accurately simulate flow through sedimentary structures by modeling an idealized, two-dimensional permeable channel or hydrogeologic layer embedded in a nearly impermeable surrounding medium, or ``domain." In their plan-view benchmark, the channel lay within the horizontal plane as was angled counterclockwise relative to the southern boundary of the model domain (by $30^{\circ}$ in most cases). Constant-head boundary conditions at the ends of the channel were set to induce uniform flow along the channel in the corresponding analytical solution. The channel and surrounding domain were discretized using either a rectilinear grid, which satisfies the CVFD requirement, or a ``flexible triangular" grid that is unstructured with triangular cells and does not satisfy the CVFD requirement. They found that the standard, conductance-based flow formulation gave accurate results on the rectilinear grid but was subject to significant error on the unstructured grid, whereas the XT3D flow formulation gave accurate results on both grids, as expected. However, in the transect (cross-sectional) version of their benchmark, which used a vertically offset grid to discretize the nearly impermeable domain and a permeable channel (hydrogeologic layer) inclined by $30^{\circ}$ from the horizontal, similarly poor results were observed with and without XT3D. Given the ability of XT3D to compensate for violations of the CVFD requirement, it appeared likely that another aspect of the problem formulation or the inner workings of MODFLOW 6 was responsible for the unexpected results. As noted by \cite{bardot2022}, a preliminary analysis by two authors of the present work (Provost and Langevin) suggested that the cell connectivity offered by a vertically offset grid was inadequate for allowing an accurate flow solution. 
 
-\cite{bardot2022} evaluated the effects of grid design and XT3D on the ability of MODFLOW 6 to accurately simulate flow through sedimentary structures by modeling a two-dimensional, permeable channel embedded in a nearly impermeable surrounding medium, or ``domain." The channel was angled counterclockwise from the $x$ axis of the model coordinates (by $30^{\circ}$ in most cases), and constant-head boundary conditions at the ends of the channel were set to induce uniform flow along the channel in the analytical solution. In their plan-view benchmark, the channel and surrounding domain were discretized using either a ``Regular Cartesian (RC)" grid that is rectilinear and satisfies the CVFD requirement or a ``Flexible Triangular (FT)" grid that is unstructured with triangular cells and does not satisfy the CVFD requirement. They found that the standard, conductance-based flow formulation gave accurate results on the RC grid but was subject to significant error on the FC grid, whereas the XT3D flow formulation gave accurate results on both grids, as expected. However, in their transect (cross-sectional) benchmark, which used a vertically offset grid to discretize the domain and a channel inclined by $30^{\circ}$, similarly poor results were observed with and without XT3D. The simulated groundwater flux was nearly horizontal ($0.01 - 0.03^{\circ}$ incline), and its magnitude was overestimated by 12 - 15\%. Given the ability of XT3D to compensate for violations of the CVFD requirement, it appeared likely that another aspect of the problem formulation or the inner workings of MODFLOW 6 was responsible for the unexpected results. (XXXXX Specifically mention that the NPF angle-specification "nozee" issue was looked into a found not to be the problem? Kind of an awkward detail to shoehorn in, but it would advertise this potential pitfall, which probably isn't well-known XXXXX) \cite{bardot2022} noted a suggestion by two authors of the present paper (Provost and Langevin) that inadequate grid connectivity was at the root of the problem.
+"Vertically staggered" grid connections were introduced in MODFLOW-USG \citep{modflowusg} and included for the fully unstructured (DISU) grid type in MODFLOW 6 \citep{modflow6gwf} primarily as a means to vertically subdiscretize portions of a grid that are conceptualized as being layered. A grid that includes vertically staggered connections, which in this work we call a ``vertically staggered grid," some cells have nominally ``horizontal" connections with more than one cell across a given cell face. Vertically staggered DISU grids allow more flexibility in assigning grid connectivity than do the more commonly used DIS and DISV grid types \citep{modflow6gwf} in MODFLOW 6. To our knowledge, the implications of limited grid connectivity for the accuracy of simulated flows in models with steeply dipping layers, and the potential for using vertically staggered grids to overcome this limitation, have not been previously appreciated or investigated.
 
-"Vertically staggered" grid connections were introduced in MODFLOW-USG \citep{modflowusg} and included for the DISU grid type in MODFLOW 6 \citep{modflow6gwf} primarily as a means to vertically subdiscretize portions of a grid that is conceptualized as being layered. In a vertically staggered grid, i.e., a grid that includes vertically staggered connections, some cells have nominally ``horizontal" connections with more than one cell across a given cell face. Vertically staggered MODFLOW 6 DISU grids allow more flexibility in assigning grid connectivity than do the more commonly used DIS and DISV grid types \citep{modflow6gwf}. To our knowledge, the implications of limited grid connectivity for the accuracy of simulated flows in models with steeply dipping layers, and the potential for using vertically staggered grids to overcome this limitation, have not been previously appreciated or investigated.
+In the remainder of this paper we first present a theoretical justification for the hypothesis that inadequate grid connectivity is primarily responsible for the inaccurate simulation of flows in the steeply dipping layer benchmark on a vertically offset grid. Based on that theory, we propose a method for improving the accuracy of the flow solution using XT3D together with a vertically staggered grid, and we evaluate the effectiveness of that approach in a set of benchmark problems similar to those of \cite{bardot2022}. Finally, we discuss the potential implications of our findings for practical groundwater models that include high permeability contrasts and steeply dipping layers.
 
-In the remainder of this paper we first present a theoretical justification for the hypothesis that inadequate grid connectivity is primarily responsible for the inaccurate simulation of flows in the steeply dipping channel benchmark on a vertically offset grid. Based on that theory, we propose a method for improving the accuracy of the flow solution using XT3D together with a vertically staggered grid, and we evaluate the effectiveness of that approach in a set of benchmark problems similar to those of \cite{bardot2022}. Finally, we discuss the potential implications of our findings for practical groundwater models that include high permeability contrasts and steeply dipping layers.
+{\color{red} AMP: terminology -- ``channel" vs ``hydrogeologic layer"? ``hydrogelogic layer" vs ``model layer"?}
 
-XXXXX Random thoughts:
+{\color{red} AMP: Random thoughts
 \begin{itemize}
-	\item Vertical offset happens even on a completely rectilinear grid if the water table elevation varies in horizontally adjacent cells. Doesn't seem like the same kind of issue, but think on it.
-	\item What happens with a head gradient perpendicular to the dip of the channel (across rather than along the channel)? Preliminary results suggest cross-connections and xt3d help.
-	\item Could also try making the channel less permeable than the domain; semi-confining unit.
-	\item Difference between truly single-layer model of channel vs embedded single-layer channel -- no vertical connections vs vertical connections that are no-flux. Effect on specific discharge calculations?
+	\item Vertical offset happens even on a completely rectilinear grid if the water table elevation varies in horizontally adjacent cells. Doesn't seem like the same kind of issue, but think on it. But not now, I think.
+	\item Could mention the crossflow case briefly in this paper, like \cite{bardot2022} mentioned this work as something we were looking into at the time.
+	\item Could try making the channel less permeable than the domain; semi-confining unit. Thinking not now.
+	\item Difference between truly single-layer model of channel vs embedded single-layer channel -- no vertical connections vs vertical connections that are no-flux. Effect on specific discharge calculations? Relevance of the specific-discharge "patch"? But beyond that, Kerry suggested that it's important to investigate and describe the embedded single-layer case, as it's a common use case, and she did some runs -- email of 2022-09-29.  With or without xt3d, the results were not good, and I'm not sure it's possible to get good results, since there's no way to introduce cross-connections within a single-layer channel.  Would be good to explain this in the paper.  (She also tried a vertical gradient for the embedded single-layer case, also with poor results, though this might also have something to do with the cross-flow, "heterogeneity correction" issue.)
 \end{itemize}
+}
 
 \section{Theoretical Background}
 
 \begin{figure}
 	\begin{center}
 %	\includegraphics[scale=0.8]{../figures/schem_conn_area_flux.png}
-	\includegraphics[scale=0.4]{../figures/schem_conn_area_flux_resaved.png}
-	\caption{Schematics showing (a - c) grid connectivity and vertical cell interface areas and (c - f) cell interface fluxes in two-layer models of a dipping channel using three different grid configurations: (a, d) dip-following, (b, e) vertically offset, and (c, f) cross-connected. Hatching denotes impermeable boundaries along the top and bottom of the channel. In (a) - (c), gray circles and gray lines represent cell centers and grid connections between cells, respectively, and two-headed arrows indicate cell thicknesses used to compute cell interface areas. In (d) - (f), gray arrows represent specific-discharge (groundwater flux) vectors for uniform flow through the channel, and black arrows represent the corresponding components of flux normal to cell interfaces. For visual clarity, (f) shows gray arrows only for the cell interfaces that do not exist in (e).}
+	\includegraphics[scale=0.6]{../figures/schem_conn_area_flux.png}
+	\caption{Schematics showing (a) grid connectivity and (b) cell interface fluxes in a two-layer model of a dipping channel. Hatching denotes impermeable boundaries along the top and bottom of the channel. In (a), black circles represent cell centers. Blue lines represent hydraulic connections between cells in a vertically offset grid. Red lines represent additional connections that result in a vertically staggered grid. In (b), gray arrows represent the uniform groundwater flux the model is attempting to simulate. Blue arrows represent components of the uniform groundwater flux normal to the horizontal and vertical cell-cell interfaces in the vertically offset grid. Red arrows represent components of the uniform groundwater flux normal to the additional vertical cell-cell interfaces introduced in the vertically staggered grid.}
 	\label{fig:schem-conn-area-flux}
 	\end{center}
 \end{figure}
 
-Figure \ref{fig:schem-conn-area-flux}a shows a group of four cells in a hypothetical model in which the dipping channel is discretized vertically into two layers of cells. Although such a configuration of cells can be constructed in plan view using the DISV grid type of MODFLOW 6, it cannot be constructed in cross-section because MODFLOW requires cells to have horizontal tops and bottoms. The sloping tops and bottoms of these hypothetical cells allow the cell geometry to conform to the dip of the channel, and we will therefore refer to this grid configuration as ``dip-following." The grid connectivity is analogous to the connectivity found in a MODFLOW 6 DIS (structured, or regular) grid: a cell is hydraulically connected to each cell with which it shares a face. For example, cell 1A is connected to cells 1B and 2A, but not to cell 2B. Because cells share entire faces, i.e., adjacent cell faces overlap completely, the entire cell thickness is relevant in determining the area for flow between cells in the same layer.
+Figure \ref{fig:schem-conn-area-flux}a shows a group of four cells in a two-layer, cross-sectional MODFLOW 6 model of fully saturated flow through a permeable channel (aquifer) with impermeable top and bottom boundaries. The cells have horizontal tops and bottoms and can therefore follow the dip of the channel only on average, in what \cite{bardot2022} refer to as ``staircase" fashion. If the grid is represented using a layered grid type (DIS or DISV) in MODFLOW 6, a cell is hydraulically connected to each cell in the same layer with which it has an overlapping face and with each cell in an adjacent layer with which it shares a horizontal face, as indicated by the blue lines that connect cell centers in figure \ref{fig:schem-conn-area-flux}a. Following \cite{bardot2022}, in this work we call this type of grid ``vertically offset" because the tops and bottoms of adjacent cells in the same layer are not necessarily aligned. Note that cells that have overlapping vertical faces but are in different layers (e.g., cells 1A and 2B) do not have a direct hydraulic connection in a vertically offset grid. The addition of such connections between cells in different layers, as indicated by the red lines that connect cell centers in figure \ref{fig:schem-conn-area-flux}a, results in a ``vertically staggered" grid. The ability to handle vertically staggered grids was first introduced to MODFLOW by \cite{modflowusg} in MODFLOW-USG, and the term ``vertically staggered" was first used by \cite{modflow6gwf} in the context of MODFLOW 6. The term describes a grid in which which a cell can have nominally ``horizontal" connections with with multiple cells across the same cell face. In this work, ``vertically offset" and ``vertically staggered" are used to distinguish grids that lack nominally ``horizontal" connections between cells in adjacent layers (red lines in figure \ref{fig:schem-conn-area-flux}a) from those that include such connections, respectively.  In the vertically offset grid in \ref{fig:schem-conn-area-flux}a (blue connections only), the interfacial area across which flow occurs between adjacent cells in the same layer is based on the vertical cell thickness (the entire thickness of the channel). In the vertically staggered grid (blue and red connections), the interfacial area for nominally ``horizontal" flow between adjacent cells is based on the area over which the two cell faces overlap. Thus, while the total area for nominally ``horizontal" flow across a cell face is the same as for a vertically offset grid, that total area is divided between an adjacent cell in the same layer (blue connection) and an adjacent cell in the adjacent layer (red connection). In MODFLOW 6, vertically offset grids can be represented using the structured (DIS), vertex-based (DISV), or fully unstructured (DISU) grid type, whereas vertically staggered grids can be represented only using the DISU grid type.
 
-One would intuitively expect a dip-following grid to be well suited to simulating uniform flow along the channel. In figure \ref{fig:schem-conn-area-flux}d, a specific discharge (groundwater flux) vector representative of uniform flow along the channel is superimposed on each cell interface, together with a vector representing the component of the flux normal to the interface. The normal flux vectors show the directions in which groundwater must be able to flow between cells to accurately represent the uniform flow field. In the case of a dip-following grid, flow must simply pass from left to right between adjacent cells in the same layer (e.g., from cell 1A to cell 1B, and from cell 2A to cell 2B). There is no flow of groundwater between cells in different layers (e.g., between cells 1A and 2A, or between cells 1B and 2B). The grid connectivity shown in figure \ref{fig:schem-conn-area-flux}a is sufficient to accommodate this straighforward pattern of flows between cells; in fact, vertical connections between cells in different layers are not even needed, and the channel could be represented just as well using a single layer.
+In MODFLOW 6, the default method for representing the flow between two hydraulically connected model cells is the ``conductance-based flow formulation" \citep{modflow6gwf}. In this formulation, which is based on the commonly used two-point flux approximation {\color{red} *** ref? ***}, the flow is proportional to the difference in the hydraulic heads computed at the two cell centers and a hydraulic conductance based on an effective hydraulic conductivity for the connection between the cells. On strictly rectilinear grids, such as structured MODFLOW grids with no vertical offset between cells in the same layer, with hydraulic conductivity that is isotropic or has anisotropy aligned with the three mutually perpendicular grid directions, the conductance-based formulation is second-order accurate \citep{dehotin2010modeling, modflow6gwf}. This is because strictly rectilinear grids satisfy the ``control-volume finite-difference (CVFD) requirement" that the straight-line connection between two cell centers must intersect the midpoint of the cell interface at a right angle \citep{narasimhan1976integrated}. Vertically offset grids, however, violate the CFVD requirement because nominally ``horizontal" connections between cell centers in the same layer are not strictly horizontal and therefore not perpendicular to the vertical cell interfaces they intersect. For example, in figure \ref{fig:schem-conn-area-flux}a, the connection between cells 1A and 1B is not perpendicular to the cell interface, which compromises the accuracy of the conductance-based formulation.
 
-Figure \ref{fig:schem-conn-area-flux}b shows the four cells as they would be configured for a vertically offset DIS or DISV grid in a two-layer, cross-sectional MODFLOW 6 model of the channel. The cells have horizontal tops and bottoms and can therefore follow the dip of the channel only on average, in what \cite{bardot2022} refer to as ``staircase" fashion. The pattern of grid connectivity is analogous to that in figure \ref{fig:schem-conn-area-flux}a, but it is not based strictly on which cell faces overlap. Rather, a cell is connected to each cell in the same layer with which it has an overlapping face and with each cell in an adjacent layer with which it shares a horizontal face. Significantly, cells that have overlapping vertical faces but are in different layers (e.g., cells 1A and 2B) are not connected. In the conductance-based formulation for flow, the flow between two cells in the same layer of a DIS or DISV grid (XXXXX or DISU that's not vertically staggered, but do we want to mention that here? XXXXX) is proportional to the difference in heads computed at the two cell centers and a conductance based on an effective hydraulic conductivity for the connection between the cells. If the two cells are fully saturated and have the same hydraulic conductivity and thickness, as in this example, the cell interface area used to calculate the conductance is effectively based on the full cell thickness, as shown in figure \ref{fig:schem-conn-area-flux}b. Also, the length on which the conductance is based is the horizontal distance, not the straight-line distance, between the cell centers.
+The conductance-based formulation was the only flow formulation available in versions of MODFLOW prior to MODFLOW 6. As mentioned earlier, the limitations of the conductance-based formulation on vertically offset grids were well recognized. However, the ability to use unstructured grids in MODFLOW-USG and MODFLOW 6 introduced the potential to violate the CVFD requirement, and thereby render the conductance-based formulation less accurate, even in the absence of vertical offsets. To improve accuracy on unstructured grids, and to allow accurate simulation of arbitrarily oriented two- or three-dimensional anisotropy, the optional XT3D flow formulation \citep{modflow6xt3d} was introduced in MODFLOW 6. XT3D formulates the flow between two cells by interpolating head values from the two cells and their neighboring cells to construct an estimate of the full, two- or three-dimensional head-gradient vector on each side of the cell interface; applying the cell conductivity tensors to obtain an estimate of the groundwater flux vector on each side of the interface; and reconciling the two flux estimates to ensure continuity of flow across the interface. By performing flow calculations using Darcy's Law in its tensorial form, based on a ``multi-point" approximation of the head gradient, XT3D accounts for both arbitrarily oriented anisotropy and geometric irregularity of the grid.
 
-As mentioned earlier, for the conductance-based flow formulation to provide maximum accuracy, the model grid must satisfy the CVFD requirement that the straight-line connection between two cell centers must intersect the midpoint of the cell interface at a right angle. In a vertically offset grid, connections between cells across vertical cell interfaces are generally not horizontal and, therefore, not perpendicular to the interface. For example, in \ref{fig:schem-conn-area-flux}b, the nominally ``horizontal" connection between cells 1A and 1B is not perpendicular to the cell interface, which compromises the accuracy of conductance-based formulations.  (XXXXX Also, in the grids considered by \cite{narasimhan1976integrated}, there was no partial overlap between cells faces, but do we want to get into that here? XXXXX)
+The dipping-channel benchmark problem of \cite{bardot2022} used a vertically offset grid, which is the type of grid used most often in MODFLOW models. Test simulations using the conductance-based flow formulation for a steeply dipping channel (hydrogeologic layer) embedded in a domain that is six orders of magnitude less hydraulically conductive yielded significant errors in the simulated flows. The simulated groundwater flux in the middle of the channel was not along the $30^{\circ}$ incline of the channel, but nearly horizontal ($0.03^{\circ}$ incline), and its magnitude was overestimated by 15\%. Significant errors in the simulated flows were expected in this case, given that the conductance-based flow formulation does not rigorously account for violations of the CVFD requirement that the cell-cell connection be perpedicular to the cell-cell interface, and that it takes the connection length to be the horizontal distance between cell centers.  Given the ability of XT3D to account rigorously for grid connections that are not perpendicular to cell interfaces, and for the increase in connection length due to the slope of the connection, rerunning the simulation with XT3D activated could have been expected to improve the flow solution substantially. However, \cite{bardot2022} observed similarly poor results with XT3D: the flux was still nearly horizontal ($0.01^{\circ}$ incline), and its magnitude was overestimated by 12\%. Based on a preliminary analysis by two authors of the present work (Provost and Langevin), \cite{bardot2022} hypothesized that the unexpectedly large error in the flow solution with XT3D was related to indequate grid connectivity was at the root of the problem.
 
-XXXXX Mostly covered in intro, so condense here XXXXX In their dipping-channel benchmark problem, \cite{bardot2022} found that, as expected, the standard, conductance-based formulation gave poor results for a steeply dipping channel discretized using a vertically offset grid. The simulated groundwater flux in the middle of the channel was not along the $30^{\circ}$ incline of the channel, but nearly horizontal ($0.03^{\circ}$ incline), and its magnitude was overestimated by 15\%. Given the ability of XT3D to compensate for grid connections that are not perpendicular to cell interfaces, rerunning the simulation with XT3D activated could have been expected to improve the flow solution substantially. However, \cite{bardot2022} observed similarly poor results with XT3D: the flux was still nearly horizontal ($0.01^{\circ}$ incline), and its magnitude was overestimated by 12\%. Something other than a simple violation of the CVFD perpendicularity condition was evidently responsible, and \cite{bardot2022} noted a suggestion by two authors of the present paper (Provost and Langevin) that inadequate grid connectivity was at the root of the problem.
+The role of grid connectivity in enabling accurate simulation of flow along a dipping channel can be understood by considering figure \ref{fig:schem-conn-area-flux}b, in which components of the groundwater flux (specific discharge) vector representative of steady, uniform flow along the channel are superimposed on each cell interface. Gray vectors represent the uniform flux oriented along the channel, which the model is attempting to simulate. Blue vectors represent the flux components normal to cell interfaces that correspond to blue connections in figure \ref{fig:schem-conn-area-flux}a, which are common to both the vertically offset and vertically staggered grids. Red vectors represent the flux components normal to cell interfaces that correspond to red connections in figure \ref{fig:schem-conn-area-flux}a, which are lacking in the vertically offset grid.
 
-The influence of grid connectivity on the results observed by \cite{bardot2022} can be explained with the help of figures \ref{fig:schem-conn-area-flux}b and \ref{fig:schem-conn-area-flux}e. Figure \ref{fig:schem-conn-area-flux}e shows the specific discharge vector superimposed on each cell interface of the vertically offset grid, together with a vector representing the component of the flux normal to the interface. As in the case of a dip-following grid (figure \ref{fig:schem-conn-area-flux}d), flow passes from left to right between adjacent cells in the same layer. However, unlike in the dip-following grid, there must also be vertical flow from each cell in layer 2 and to the cell immediately above it in layer 1 (e.g., from cell 2A and to cell 1A). This pattern of flow between cells obviously cannot be a solution to uniform, steady-state flow through the channel, since the exclusively upward vertical flows would deplete layer 2 and accumulate water in layer 1. Short of resorting to alternating upward and downward vertical flows, which would compromise the uniformity of the flow, the only alternative for representing uniform, steady-state flow on the vertically offset grid is to have exclusively horizontal flow. Although this concept is illustrated for a two-layer model in figure \ref{fig:schem-conn-area-flux}e, the same reasoning applies to a model of the channel with any number of layers. This explains why \cite{bardot2022} observed nearly horizontal flow in the middle portion of the channel, away from the lateral boundaries, where nearly uniform flow was established. Thus, it appears the nearly horizontal flows are not primarily due to what \cite{bardot2022} call the ``cosine error" associated with the orientation and length of the sloping grid connections, but to the inability of the vertically offset grid to route flow appropriately between cells.
+The blue vectors in figure \ref{fig:schem-conn-area-flux}b show that to simulate steady, uniform flow along the dipping channel, cells must exchange water not only ``horizontally" with neighboring cells in the same layer, but also vertically with cells in the adjacent layer. Specifically, there must be flow from cells in the bottom layer to cells in the top layer, which corresponds to the vertical component of the groundwater flux. Note, however, that the blue vectors alone are incompatible with steady, uniform flow along the channel because the exchange of water between the two model layers is in one direction only: upward. Such a steady-state flow configuration would imply continuous depletion of flow within the bottom layer and accumulation of flow within the top layer as one moves along the channel in the direction of flow. Thus, steady, uniform flow along the channel cannot be simulated accurately without some mechanism for returning flow from the top layer to the bottom layer. The vertically staggered grid provides such a mechanism by offering additional connections between cells in adjacent layers. Vertical flows from the bottom layer to the top layer, represented by vertical blue vectors in figure \ref{fig:schem-conn-area-flux}b, can be returned to the bottom layer by nominally ``horizontal" flows, represented by red vectors in figure \ref{fig:schem-conn-area-flux}b. Although this concept has been illustrated using a two-layer model for simplicity, the same reasoning applies given any number of layers.
 
-This suggests an approach for constructing the grid to improve the accuracy of the flow solution. Figure \ref{fig:schem-conn-area-flux}c shows a grid that includes additional connections between cells in different layers compared to the grid in \ref{fig:schem-conn-area-flux}b. For example, cell 1A is connected not only cells 2A and 1B, but also the cell 2B. The grid connectivity is determined by overlap between cell faces; if two cells have faces that overlap even partially, the cells are connected across those faces. The area of the interface is the area of overlap between the cell faces. This grid configuration, which was introduced MODFLOW-USG \citep{modflowusg} and is available for the DISU grid type in MODFLOW 6, is called ``vertically staggered" and allows a cell to have nominally ``horizontal" connections with more than one cell across a given cell face. In this case, vertical staggering is used to introduce ``cross-connections" between cells in different layers. The ramifications of cross-connections for flow between cells are illustrated in figure \ref{fig:schem-conn-area-flux}f. Inclusion of cross-connections (e.g., between cells 1A and 2B) allows upward vertical flows from layer 2 to layer 1 (e.g., from cell 2A to cell 1A) to be routed back down to layer 2 so water does not accumulate in layer 1. The remainder of this paper describes test problems that evaluate the effectiveness of cross-connections for improving the accuracy of simulated flow though the channel.
+Once the appropriate connectivity is established using a vertically staggered grid, it is the role of the flow formulation to account properly for the geometry of the grid, a task for which XT3D was specifically designed. However, XT3D alone cannot compensate for grid connectivity that does not provide adequate pathways for flow. This explains why using XT3D did not improve the simulation results substantially on a vertically offset grid in the benchmark tests of \cite{bardot2022}.  In the middle section of the channel, away from the end boundary conditions, the flow solution approached steady, uniform flow the only way that it could given the limited connectivity of the vertically offset grid: by suppressing vertical flows between layers, thereby rendering the overall flow approximately horizontal.
+
+The arguments presented in this section suggest that, in addition to the use of XT3D, the enhanced connectivity provided by a vertically staggered grid can be important for obtaining an accurate flow solution in MODFLOW 6 simulations that involve steeply dipping layers. The next section presents results of simulations designed to test this hypothesis.
 
 \section{Description of Test Problems}
 
 The test problems are patterned after the cross-sectional (transect) benchmarks of \cite{bardot2022}. They attempt simulate uniform flow in a permeable channel embedded in a less permeable surrounding ``domain." The channel is of uniform width and hydraulic conductivity and is inclined relative to the horizontal.
 
-To simulate flow along a channel inclined at angle $\theta$, heads are specified at the centers of cells along the perimeter of the model (XXXXX this assumes we're using the transect\_benchmark version of the model, which includes the "domain," for all of our final runs XXXXX) using an analytical solution that corresponds to a unit head gradient inclined at angle $\theta$ \citep{bardot2022}:
+To simulate flow along a channel inclined at angle $\theta$, heads are specified at the centers of cells along the perimeter of the model {\color{red} (AMP: this assumes we're using the transect\_benchmark version of the model, which includes the "domain," for all of our final runs)} using an analytical solution that corresponds to a unit head gradient inclined at angle $\theta$ \citep{bardot2022}:
 
 \begin{equation}
 \label{eqn:head_analyt_along}
 h = - x \cos \theta - z \sin \theta.
 \end{equation}
 
-\noindent where $h$ is head in meters and $x$ and $z$ are the horizontal and vertical model coordinates, respectively, in meters. Flow across the channel (XXXXX seems like this would be good to include XXXXX) is simulated using the modified head function
-\begin{equation}
-\label{eqn:head_analyt_across}
-h = x \sin \theta - z \cos \theta,
-\end{equation}
-which represents a unit head gradient perpendicular to the long axis of the channel. In both cases, the hydraulic conductivity of the channel is set to 1 m/d (meter per day) so that the analytical flow solution is a groundwater flux of 1 m/d either along or across the channel. The conductivity of the domain surrounding the channel varies according to the scenario being investigated. In the homogeneous limit, the conductivity of the domain is set equal to that of the channel. In the highly heterogeneous limit, the conductivity of the domain is set much lower than that of the channel to effectively isolate the channel hydraulically. XXXXX Could also try making the channel less permeable than the domain; semi-confining unit XXXXX
+\noindent where $h$ is head in meters and $x$ and $z$ are the horizontal and vertical model coordinates, respectively, in meters. The hydraulic conductivity of the channel is set to 1 m/d (meter per day) so that the analytical flow solution is a groundwater flux of 1 m/d either along or across the channel. The conductivity of the domain surrounding the channel varies according to the scenario being investigated. In the homogeneous limit, the conductivity of the domain is set equal to that of the channel. In the highly heterogeneous limit, the conductivity of the domain is set much lower than that of the channel to effectively isolate the channel hydraulically.
 
-Simulations are performed using variations on two test problems that differ in their method of discretization. The first test problem uses the traditional approach of representing the inclined channel using a vertically offset grid of the MODFLOW 6 DIS (structured) type. (XXXXX To be decided: present results for the DIS grid, or for the equivalent of the DIS grid after conversion to DISU? XXXXX) This problem confirms the findings of \cite{bardot2022} and illustrates the limitations of the vertically offset grid approach. The second test problem is similar to the first but uses a vertically staggered grid of MODFLOW 6 DISU (unstructured) type. The second problem is designed to evaluate the effectiveness of cross-connections between layers (illustrated in figure \ref{fig:schem-conn-area-flux}c) in improving the accuracy of the flow solution, both with and without XT3D. Variations on both test problems are described in the ``Results and Discussion" section.
+Simulations are performed using variations on two test problems that differ in their method of discretization. The first test problem uses the traditional approach of representing the inclined channel using a vertically offset grid of the MODFLOW 6 DIS (structured) type. {\color{red} (AMP: present results for the DIS grid, or for the equivalent of the DIS grid after conversion to DISU?)} This problem confirms the findings of \cite{bardot2022} and illustrates the limitations of the vertically offset grid approach. The second test problem is similar to the first but uses a vertically staggered grid of MODFLOW 6 DISU (unstructured) type. The second problem is designed to evaluate the effectiveness of cross-connections between layers (illustrated in figure \ref{fig:schem-conn-area-flux}c) in improving the accuracy of the flow solution, both with and without XT3D. Variations on both test problems are described in the ``Results and Discussion" section.
 
 Jupyter notebooks for both test problems are available in the Supporting Information that accompanies this paper. The notebooks leverage the capabilities of FloPy \citep{bakker2016scripting} to assist in setting up input for and processing results from the MODFLOW 6 simulations. The second test problem is formulated by starting with a DIS grid, converting it to an equivalent DISU grid, and adding cross-connections. A Python script for converting and modifying the grid is included.
 
 \section{Results and Discussion}
 
-XXXXX See the temporary ``preliminary results" section at the end of the manuscript XXXXX
+{\color{red} AMP: Note that there's a temporary ``preliminary results" section at the end of the manuscript.}
 
-XXXXX Results without the domain are presented first to "cleanly" illustrate the main problem and its solution. Results with the domain are then presented to give more of an indication of how things might work in practice. Unless stated otherwise, the domain is 6 orders of magnitude less conductive than the channel, as in \cite{bardot2022}. XXXXX
+{\color{red} AMP: Obviously need to substitute in our "real" results with "real" discussion and captions here.}
+
+{\color{red} AMP: Based on the release notes, looks like the specific-discharge ``patch" went into v6.3.0. Mention it? Note that here is still the issue of coordinate dependence.}
+
+{\color{red} AMP: Results without the domain are presented first to "cleanly" illustrate the main problem and its solution. Results with the domain are then presented to give more of an indication of how things might work in practice. Kerry has suggested that perhaps the cases with the domain are sufficient -- let's consider.}
+
+{\color{red} AMP: Unless stated otherwise, the domain is 6 orders of magnitude less conductive than the channel, as in \cite{bardot2022}.}
+
+{\color{red} AMP: Add and discuss results for how the flow error varies with discretization.  See plots in Kerry's emails of 2022-10-06 and 2022-12-14.}
+
+{\color{red} AMP: Add and discuss results for how the flow error varies with dip angle. See plots in Kerry's email of 2022-12-14. "Spike" at 45 degrees due to "disconnection?"}
+
+{\color{red} AMP: Add and discuss results for how the flow error varies with K contrast between channel and domain (heterogeneity).  See plots in Kerry's email of 2022-12-14.}
+
+{\color{red} AMP: For consistency, should choose one notebook or the other for all runs.}
 
 \subsection{Test Problem 1: Vertically Offset Discretization}
 
@@ -132,33 +146,16 @@ XXXXX Results without the domain are presented first to "cleanly" illustrate the
 \centering
 \begin{subfigure}{0.4\textwidth}
 	\includegraphics[width=\textwidth]{../figures/disu-af-vo-s-head.png}
-	\caption{standard conductance-based formulation}
+	\caption{vertically offset grid, standard conductance-based formulation}
 	\label{fig:disu-s-nocc-head}
 \end{subfigure}
 \hfill
 \begin{subfigure}{0.4\textwidth}
 	\includegraphics[width=\textwidth]{../figures/disu-af-vo-x-head.png}
-	\caption{XT3D}
+	\caption{vertically offset grid, XT3D}
 	\label{fig:disu-x-nocc-head}
 \end{subfigure}
 \caption{Specific discharge and head for a vertically offset grid. As Kerry and Jim found previously, the news is all bad; the flow tends to go horizontal, and XT3D doesn't really help. (preliminary result from disu\_approach model, 5x11 grid without cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-af-vo-s and disu-af-vo-x)}
-\label{fig:figures}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\begin{subfigure}{0.4\textwidth}
-	\includegraphics[width=\textwidth]{../figures/disu-cf-vo-s-head.png}
-	\caption{standard conductance-based formulation}
-	\label{fig:disu-s-nocc-cf-head.}
-\end{subfigure}
-\hfill
-\begin{subfigure}{0.4\textwidth}
-	\includegraphics[width=\textwidth]{../figures/disu-cf-vo-x-head.png}
-	\caption{XT3D}
-	\label{fig:disu-x-nocc-cf-head}
-\end{subfigure}
-\caption{Specific discharge and head for a vertically offset grid and boundary heads set up for crossflow. The standard formulation is a fail, but XT3D nails it, even without cross-connections. (preliminary result from disu\_approach model, 5x11 grid without cross-connections, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-cf-vo-s and disu-cf-vo-x)}
 \label{fig:figures}
 \end{figure}
 
@@ -168,33 +165,16 @@ XXXXX Results without the domain are presented first to "cleanly" illustrate the
 \centering
 \begin{subfigure}{0.4\textwidth}
 	\includegraphics[width=\textwidth]{../figures/disu-af-vs-s-head.png}
-	\caption{standard conductance-based formulation}
+	\caption{vertically staggered grid, standard conductance-based formulation}
 	\label{fig:disu-s-cc-head}
 \end{subfigure}
 \hfill
 \begin{subfigure}{0.4\textwidth}
 	\includegraphics[width=\textwidth]{../figures/disu-af-vs-x-head.png}
-	\caption{XT3D}
+	\caption{vertically staggered grid, XT3D}
 	\label{fig:disu-x-cc-head}
 \end{subfigure}
-\caption{Specific discharge and head for a vertically staggered grid with cross-connections. The news is much better; the standard formulation is much improved, and XT3D nails it. (preliminary result from disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-af-vs-s and disu-af-vs-x)}
-\label{fig:figures}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\begin{subfigure}{0.4\textwidth}
-	\includegraphics[width=\textwidth]{../figures/disu-cf-vs-s-head.png}
-	\caption{standard conductance-based formulation}
-	\label{fig:disu-s-cc-cf-head}
-\end{subfigure}
-\hfill
-\begin{subfigure}{0.4\textwidth}
-	\includegraphics[width=\textwidth]{../figures/disu-cf-vs-x-head.png}
-	\caption{XT3D}
-	\label{fig:disu-x-cc-cf-head}
-\end{subfigure}
-\caption{Specific discharge and head for a vertically staggered grid with cross-connections and boundary heads set up for crossflow. The standard formulation does pretty well, and XT3D nails it. (preliminary result from disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-cf-vs-s and disu-cf-vs-x)}
+\caption{Specific discharge and head for a vertically staggered grid with cross-connections. The news is much better; the standard formulation is much improved, and XT3D nails it. (preliminary result from disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-af-vs-s and disu-af-vs-x)  {\color{red} AMP: If keeping, combine with fig 3.}}
 \label{fig:figures}
 \end{figure}
 
@@ -204,35 +184,16 @@ XXXXX Results without the domain are presented first to "cleanly" illustrate the
 \centering
 \begin{subfigure}{0.4\textwidth}
 	\includegraphics[width=\textwidth]{../figures/disu-d-af-vo-s-head.png}
-	\caption{standard conductance-based formulation}
+	\caption{vertically offset grid, standard conductance-based formulation}
 	\label{fig:disu-s-nocc-head}
 \end{subfigure}
 \hfill
 \begin{subfigure}{0.4\textwidth}
 	\includegraphics[width=\textwidth]{../figures/disu-d-af-vo-x-head.png}
-	\caption{XT3D}
+	\caption{vertically offset grid, XT3D}
 	\label{fig:disu-x-nocc-head}
 \end{subfigure}
 \caption{Specific discharge and head for a vertically offset grid with the domain. Results are similar to those without the domain and consistent with what Kerry and Jim found previously; the flow tends to go horizontal, and XT3D doesn't really help. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, without cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-d-af-vo-s and disu-d-af-vo-x)}
-\label{fig:figures}
-\end{figure}
-
-XXXXX Idea: See how heterogeneity affects the error -- series of runs with varying permeability contrast between channel and surrounding domain (from 1:1 to very large), producing a plot along the lines of figs. 3d and 4d in \cite{bardot2022}. Will need to use the transect\_benchmark model for this, as we probably should for all of the final simulations. XXXXX
-
-\begin{figure}[H]
-\centering
-\begin{subfigure}{0.4\textwidth}
-	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vo-s-head.png}
-	\caption{standard conductance-based formulation}
-	\label{fig:disu-s-nocc-cf-head.}
-\end{subfigure}
-\hfill
-\begin{subfigure}{0.4\textwidth}
-	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vo-x-head.png}
-	\caption{XT3D}
-	\label{fig:disu-x-nocc-cf-head}
-\end{subfigure}
-\caption{Specific discharge and head for a vertically offset grid with the domain and boundary heads set up for crossflow. The standard formulation gives nearly vertical flow in the channel, and XT3D also does poorly, even mid-channel. The huge specific discharge vectors near the channel boundary are apparently caused by XT3D's head-gradient interpolation drawing heads from the domain, where the head gradient is huge, when computing nominally horizontal flows between cells within the channel. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, without cross-connections, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-d-cf-vo-s and disu-d-cf-vo-x)}
 \label{fig:figures}
 \end{figure}
 
@@ -242,42 +203,27 @@ XXXXX Idea: See how heterogeneity affects the error -- series of runs with varyi
 \centering
 \begin{subfigure}{0.4\textwidth}
 	\includegraphics[width=\textwidth]{../figures/disu-d-af-vs-s-head.png}
-	\caption{standard conductance-based formulation}
+	\caption{vertically staggered grid, standard conductance-based formulation}
 	\label{fig:disu-s-cc-head}
 \end{subfigure}
 \hfill
 \begin{subfigure}{0.4\textwidth}
 	\includegraphics[width=\textwidth]{../figures/disu-d-af-vs-x-head.png}
-	\caption{XT3D}
+	\caption{vertically staggered grid, XT3D}
 	\label{fig:disu-x-cc-head}
 \end{subfigure}
-\caption{Specific discharge and head for a vertically staggered grid with the domain and with cross-connections. The standard formulation isn't horrible, and XT3D does very well except at the channel boundary, where there's presumably a "staircase" effect. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, with cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-d-af-vs-s and disu-d-af-vs-x)}
-\label{fig:figures}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\begin{subfigure}{0.4\textwidth}
-	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vs-s-head.png}
-	\caption{standard conductance-based formulation}
-	\label{fig:disu-s-cc-cf-head}
-\end{subfigure}
-\hfill
-\begin{subfigure}{0.4\textwidth}
-	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vs-x-head.png}
-	\caption{XT3D}
-	\label{fig:disu-x-cc-cf-head}
-\end{subfigure}
-\caption{Specific discharge and head for a vertically staggered grid with the domain and with cross-connections and boundary heads set up for crossflow. The standard formulation is much improved. You can't tell because of the scale of the vectors, but XT3D does well mid-channel. However, near the channel boundary it still has huge flows due to interpolating heads from the domain. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-d-cf-vs-s and disu-d-cf-vs-x)}
+\caption{Specific discharge and head for a vertically staggered grid with the domain and with cross-connections. The standard formulation isn't horrible, and XT3D does very well except at the channel boundary, where there's presumably a "staircase" effect. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, with cross-connections, $30^{\circ}$ incline, set up for flow along the channel; scenarios disu-d-af-vs-s and disu-d-af-vs-x) {\color{red} AMP: Combine with fig 4.} {\color{red} AMP: Explain boundary anomalies.}}
 \label{fig:figures}
 \end{figure}
 
 \section{Conclusions}
 
-XXXXX The concepts in this paper have been easiest to discuss in terms of layers, but they're not limited to layered grids. XXXXX
+{\color{red} AMP: Need conclusions.}
+
+{\color{red} AMP: The concepts in this paper have been easiest to discuss in terms of grid layers, but they're not limited to layered grids.}
 
 \section{Acknowledgments}
-Thank all those reviewers.
+{\color{red} AMP: Need acknowledgments.}
 
 \section{Supporting Information}
 
@@ -292,7 +238,7 @@ Thank all those reviewers.
 \end{figure}
 
 \section{preliminary results}
-This temporary section is a summary of preliminary results that can help provide context and guide our thinking as we construct the story.  Specific results may or may not make it into the paper.
+{\color{red} AMP: This temporary section is a summary of preliminary results that can help provide context and guide our thinking as we construct the story.  Specific results may or may not make it into the paper.}
 
 The models referenced are:
 \begin{itemize}
@@ -379,9 +325,77 @@ The channel is represented using five layers of cells.
 \paragraph{with cross-connections, without xt3d (standard formulation):} Results are comparable to those in the crossconnected model without xt3d. Again, not great, but not terrible.
 
 \subsection{Crossflow}
-What happens if the flow is across the channel rather than along it? Added scenarios to the disu\_approach notebook to simulate this. Haven't analyzed the results in detail, but using cross-connections together with xt3d appears to help in this case, as well.
+What happens if the flow is across the channel rather than along it? Using cross-connections together with xt3d appears to help when only the channel is simulated (no domain). With the domain present, the results are thrown off considerably by the lack of a ``heterogeneity correction" in the xt3d interpolation, though the errors may be concentrated near the channel boundary.  Will not get too much into the crossflow case in this paper, but could mention the heterogeneity correction as ongoing work.
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-cf-vo-s-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-nocc-cf-head.}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-cf-vo-x-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-nocc-cf-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically offset grid and boundary heads set up for crossflow. The standard formulation is a fail, but XT3D nails it, even without cross-connections. (preliminary result from disu\_approach model, 5x11 grid without cross-connections, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-cf-vo-s and disu-cf-vo-x)}
+\label{fig:figures}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-cf-vs-s-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-cc-cf-head}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-cf-vs-x-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-cc-cf-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically staggered grid with cross-connections and boundary heads set up for crossflow. The standard formulation does pretty well, and XT3D nails it. (preliminary result from disu\_approach model, 5x11 grid with cross-connections, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-cf-vs-s and disu-cf-vs-x)}
+\label{fig:figures}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vo-s-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-nocc-cf-head.}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vo-x-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-nocc-cf-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically offset grid with the domain and boundary heads set up for crossflow. The standard formulation gives nearly vertical flow in the channel, and XT3D also does poorly, even mid-channel. The huge specific discharge vectors near the channel boundary are apparently caused by XT3D's head-gradient interpolation drawing heads from the domain, where the head gradient is huge, when computing nominally horizontal flows between cells within the channel. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, without cross-connections, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-d-cf-vo-s and disu-d-cf-vo-x)}
+\label{fig:figures}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vs-s-head.png}
+	\caption{standard conductance-based formulation}
+	\label{fig:disu-s-cc-cf-head}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.4\textwidth}
+	\includegraphics[width=\textwidth]{../figures/disu-d-cf-vs-x-head.png}
+	\caption{XT3D}
+	\label{fig:disu-x-cc-cf-head}
+\end{subfigure}
+\caption{Specific discharge and head for a vertically staggered grid with the domain and with cross-connections and boundary heads set up for crossflow. The standard formulation is much improved. You can't tell because of the scale of the vectors, but XT3D does well mid-channel. However, near the channel boundary it still has huge flows due to interpolating heads from the domain. (preliminary result from disu\_approach model, 5x11 channel with 5x11 subdomains above and below, $30^{\circ}$ incline, set up for flow across the channel; scenarios disu-d-cf-vs-s and disu-d-cf-vs-x)}
+\label{fig:figures}
+\end{figure}
 
 \subsection{Domain}
-Results with the surrounding "domain" (from an updated disu\_approach notebook) are similar but not identical, apparently due to the "staircase" effect. Might be best to present most of our results without the domain, at least when illustrating the main problem and its solution (to keep the "theory" clear), then discuss what happens when the domain is present (which is more like in practice).
+Results with the surrounding "domain" (from an updated disu\_approach notebook) are similar but not identical, apparently due to the "staircase" effect. Original thought was to present most of our results without the domain, at least when illustrating the main problem and its solution (to keep the "theory" clear), then discuss what happens when the domain is present (which is more like in practice). Kerry has suggested the results with the domain are sufficient.
 
 \end{document}
