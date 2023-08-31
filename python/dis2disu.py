@@ -30,7 +30,7 @@ class ConnectionPropertyList():
 
 class Dis2Disu():
 
-    def __init__(self, delr, delc, top, botm, staggered):
+    def __init__(self, delr, delc, top, botm, staggered, dztol):
         
         assert isinstance(delr, np.ndarray)
         assert isinstance(delc, np.ndarray)
@@ -50,6 +50,7 @@ class Dis2Disu():
         self.top = top
         self.botm = botm
         self.staggered = staggered
+        self.dztol = dztol
 
         self.connection_list = ConnectionPropertyList()
         self._initialize()
@@ -295,7 +296,8 @@ class Dis2Disu():
         for ksearch in range(self.nlay):
             top, bot = self.get_cell_topbot(ksearch, i1, j1)
             dz = min(this_top, top) - max(this_bot, bot)
-            if dz > 0:
+            #if dz > 0:
+            if dz > self.dztol:
                 # there is overlap so add a connection
                 nn = self.get_nodenumber(ksearch, i1, j1)
                 ihc = 2
