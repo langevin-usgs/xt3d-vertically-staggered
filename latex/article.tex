@@ -21,13 +21,6 @@
 
 \newcommand{\matr}[1]{\mathbf{#1}}
 
-%\title{Improving Accuracy of Simulated Flows in Steeply Dipping Layers Using Full-Connectivity Grids with the XT3D Multi-Point Flux Approximation in MODFLOW 6}
-
-% suggested title revision
-\title{Efficient and Accurate Modeling of Flow through Sedimentary Structures with MODFLOW 6}
-
-%\title{Efficient and Accurate Modeling of Flow through Dipping Aquifers with MODFLOW 6}
-
 \title{The Importance of Cell Connectivity for Efficient and Accurate Modeling of Flow through Dipping Aquifers with MODFLOW 6}
 
 \author{
@@ -49,9 +42,7 @@
 
 \textbf{Conflict of interest:} None.
 
-\textbf{Key words:} groundwater flow simulation, discretization, dipping layers, cell connectivity, multi-point flux approximation, sedimentary structures
-
-%\textbf{Article impact statement: Groundwater flow through dipping aquifers can be accurately simulated using a vertically offset grid combined with an unstructured grid approach and the XT3D multi-point flow formulation in MODFLOW 6.}
+\textbf{Key words:} groundwater flow simulation, discretization, vertically offset grid, dipping layers, cell connectivity, multi-point flux approximation, sedimentary structures
 
 \textbf{Article impact statement:} Accurate simulation of groundwater flow through dipping aquifers using MODFLOW 6 can require enhanced cell connectivity and use of a multi-point formulation for flow between cells. This can be achieved using an unstructured grid and the XT3D flow formulation.
 
@@ -67,13 +58,13 @@ Numerical simulation of layered aquifer systems can involve a tradeoff between e
 
 An alternative approach, called the ``boundary-matching" method by \cite{hoaglund2003}, allows model grid layers to "deform" vertically to follow the undulations of hydrogeologic layers. This method ``minimize[s] the number of model [grid] layers required to simulate an aquifer system'' \citep{modflow84}. In fact, it is common practice to represent each hydrogeologic layer using a single, boundary-matching model grid layer. However, the non-orthogonality of the resulting grid can be a source of significant model error \citep{hoaglund2003}.
 
-In models based on the Control Volume Finite Difference method {(\color{red} ref for this?)}, which is the method used in the MODFLOW family of hydrologic simulation codes \citep{modflow6gwf}{\color{red} (ref to our new MODFLOW overview paper!)}, the loss of accuracy associated with the boundary-matching approach results from the use of a "two-point" formulation to calculate flows between adjacent grid cells. In the two-point formulation, the flow between two cells is proportional to the difference between the heads calculated in those two cells. For simulations of flow through isotropic porous media, the two-point flow formulation is most accurate when the grid satisfies the so-called ``CVFD requirement" \citep{modflow6gwf} that the straight-line connection between two cell centers must intersect the midpoint of the cell interface at a right angle \citep{narasimhan1976integrated}. However, boundary-matching grids violate the CVFD requirement at vertical interfaces between cells in the same model layer because the corresponding cell connections are not strictly horizontal.
+In models based on the Control Volume Finite Difference method, which is the method used in the MODFLOW family of hydrologic simulation codes \citep{modflow6gwf, langevin2024}, the loss of accuracy associated with the boundary-matching approach results from the use of a "two-point" formulation to calculate flows between adjacent grid cells. In the two-point formulation, the flow between two cells is proportional to the difference between the heads calculated in those two cells. For simulations of flow through isotropic porous media, the two-point flow formulation is most accurate when the grid satisfies the so-called ``CVFD requirement" \citep{modflow6gwf} that the straight-line connection between two cell centers must intersect the midpoint of the cell interface at a right angle \citep{narasimhan1976integrated}. However, boundary-matching grids violate the CVFD requirement at vertical interfaces between cells in the same model layer because the corresponding cell connections are not strictly horizontal.
 
-In MODFLOW, the top and bottom surfaces of model cells are horizontal \citep{modflow6gwf}. Thus, when boundary matching is implemented in a two-dimensional (2D) cross-sectional or three-dimensional (3D) MODFLOW model, the tops of laterally adjacent cells are vertically offset from each other (as are the cell bottoms) and can follow the undulations of the aquifer boundaries only on average. Following \cite{bardot2022}, we call this type of grid ``vertically offset." In a vertically offset grid, subhorizontal cell connections across vertical cell interfaces violate the CVFD requirement, which reduces the accuracy of two-point flow formulation. For an isotropic aquifer, \cite{anderson2015applied} recommend a $10^{\circ}$ dip as a practical upper limit when using the two-point flow formulation. {\color{red} (AMP: Was this offered in the context of MODFLOW, or more generally??? I don't have that book.)}
+In MODFLOW, the top and bottom surfaces of model cells are horizontal \citep{modflow6gwf}. Thus, when boundary matching is implemented in a two-dimensional (2D) cross-sectional or three-dimensional (3D) MODFLOW model, the tops of laterally adjacent cells are vertically offset from each other (as are the cell bottoms) and can follow the undulations of the aquifer boundaries only on average. Following \cite{bardot2022}, we call this type of grid ``vertically offset." In a vertically offset grid, subhorizontal cell connections across vertical cell interfaces violate the CVFD requirement, which reduces the accuracy of two-point flow formulation. For an isotropic aquifer, \cite{hoaglund2003} note that ``the error range is smaller for smaller dips, generally $<20$\% within $10^{\circ}$ of dip."
 
-The introduction of unstructured grids into MODFLOW \citep{modflowusg, modflow6gwf} presented new ways for a grid to violate the CVFD requirements. To help overcome the limitations of the two-point flow formulation on geometrically irregular grids, MODFLOW-USG and MODFLOW 6 offer a Ghost-Node Correction (GNC) Package \citep{modflowusg, modflow6gwf}{\color{red} (ref to Dickenson and others 2007 ?)} However, configuration of optimal ghost node locations and interpolation weights is highly problem-dependent, and we are not aware of guidelines for handling general unstructured grids or arbitrarily oriented 3D anisotropy.
+The introduction of unstructured grids into MODFLOW \citep{modflowusg, modflow6gwf} presented new ways for a grid to violate the CVFD requirements. To help overcome the limitations of the two-point flow formulation on geometrically irregular grids, MODFLOW-USG and MODFLOW 6 offer a Ghost-Node Correction (GNC) Package \citep{modflowusg, modflow6gwf}. However, configuration of optimal ghost node locations and interpolation weights is highly problem-dependent, and we are not aware of guidelines for handling general unstructured grids or arbitrarily oriented 3D anisotropy.
 
-The optional XT3D flow formulation \citep{modflow6xt3d} introduced in MODFLOW 6 offers a more ``automatic" alternative to ghost nodes. XT3D is a multi-point flow formulation {\color{red} (refs for multi-point)} based on gradient reconstruction {\color{red} (refs for gradient reconstruction)}. By performing flow calculations using Darcy's Law in its tensorial form using a multi-point approximation of the head gradient vector, XT3D accounts for both arbitrarily oriented anisotropy and geometric irregularity of the grid. In theory, XT3D should be able to compensate for the geometric irregularity introduced by vertical offsets between adjacent cells in the same grid layer.
+The optional XT3D flow formulation \citep{modflow6xt3d} introduced in MODFLOW 6 offers a more ``automatic" alternative to ghost nodes. XT3D is a multi-point flow formulation \citep{edwards1998, aavatsmark2002} based on gradient reconstruction \citep{mavriplis2003leastsq, diskin2008accuracy}. By performing flow calculations using Darcy's Law in its tensorial form using a multi-point approximation of the head gradient vector, XT3D accounts for both arbitrarily oriented anisotropy and geometric irregularity of the grid. In theory, XT3D should be able to compensate for the geometric irregularity introduced by vertical offsets between adjacent cells in the same grid layer.
 
 \cite{bardot2022} tested the ability of MODFLOW 6 to accurately simulate flow through sedimentary structures, both with and without XT3D. The simplest 2D cross-sectional (``transect") version of their benchmark model simulated flow through a steeply dipping, homogeneous, isotropic aquifer of uniform thickness embedded between two confining units. In test runs that used the boundary-matching method on a vertically offset grid, both the two-point flow formulation and XT3D produced flows that differed markedly from the expected magnitude and direction throughout the aquifer, regardless of how finely the aquifer was discretized. They noted, however, that a preliminary analysis by two authors of the present work (Provost and Langevin) suggested that the limited cell connectivity offered by the layered, vertically offset grids was inadequate to allow an accurate flow solution.
 
@@ -159,45 +150,43 @@ Layered-connectivity grids, which are commonly used in groundwater models \citep
 
 Like the results in Figure \ref{fig:fig2}, the results in Figure \ref{fig:fig3} show that the use of full connectivity and the XT3D flow formulation reduces the errors in calculated flows, provided at least two grid layers are used to vertically discretize the aquifer. When a single grid layer is used to represent the aquifer, the enhanced connectivity needed to achieve an accurate solution is not possible, and the XT3D flow formulation is unable to compensate for the inadequate connectivity.
 
-{\color{red} Saved just in case: This is an important finding as it demonstrates that computational efficiency can be made using a full-connectivity grid over a rectilinear grid overlay approach, but it is important to use a minimum of two grid layers per hydrogeological unit to allow vertical fluxes to be incorporated into the flow solution.}
-
 \subsection{Effects of Dip Angle and Conductivity Contrast}
 
-The base case uses an aquifer dip angle of 30$^{\circ}$ and a conductivity contrast between domain and aquifer of $10^{-6}$:1. In this subsection, we investigate the behavior of the flow solution for aquifer dip angles ranging from 0 to 80$^{\circ}$. We also examine the behavior for a range of conductivity contrasts by setting the domain conductivity to 1/2, 1/5, 1/10 and 1/100 that of the aquifer. Simulated flux magnitude and direction at the center cell for all combinations are plotted against the analytical solution in Figure \ref{fig:fig4} {\color{red} THERE'S NO GENERIC REF FOR FIG 4}. 
+The base case uses an aquifer dip angle of 30$^{\circ}$ and a conductivity contrast between domain and aquifer of $10^{-6}$:1. In this subsection, we investigate the behavior of the flow solution for aquifer dip angles ranging from 0 to 80$^{\circ}$. We also examine the behavior for a range of conductivity contrasts by setting the domain conductivity to 1/2, 1/5, 1/10 and 1/100 that of the aquifer. Simulated flux magnitude and direction at the center cell for all combinations are plotted against the analytical solution in Figure \ref{fig:fig4}. 
 
-With layered connectivity and the standard conductance-based flow formulation (Figure \ref{fig:fig4a}), the magnitude of the error in the flux magnitude (left panel) is similar for all of the conductivity ratios simulated and increases with increasing aquifer dip angle. The magnitude of the error in the flux direction (right panel) increases with decreasing conductivity ratio and reaches a maximum at a dip angle of approximately {\color{red}X-Y}\%. 
+With layered connectivity and the standard conductance-based flow formulation (Figure \ref{fig:fig4}a), the magnitude of the error in the flux magnitude (left panel) is similar for all of the conductivity ratios simulated and increases with increasing aquifer dip angle. The magnitude of the error in the flux direction (right panel) increases with decreasing conductivity ratio. As the surrounding domain becomes much less conductive than the aquifer, the flow direction tends toward horizontal.
 
-With layered connectivity and the XT3D flow formulation (Figure \ref{fig:fig4b}), the magnitude of the error in the flux magnitude (left panel) increases with decreasing conductivity ratio and increasing aquifer dip angle. The magnitude of the error in the flux direction (right panel) increases monotonically with dip angle when there is no conductivity contrast between the domain and aquifer (conductivity ratio = 1.0). For the lower conductivity ratios simulated, the magnitude of the error in the flux direction increases with decreasing conductivity ratio and reaches a maximum at a dip angle of approximately {\color{red}X-Y}\%.
+With layered connectivity and the XT3D flow formulation (Figure \ref{fig:fig4}b), the magnitude of the error in the flux magnitude (left panel) increases with decreasing conductivity ratio and increasing aquifer dip angle. The magnitude of the error in the flux direction (right panel) increases with decreasing conductivity ratio. As the surrounding domain becomes much less conductive than the aquifer, the flow direction tends toward horizontal, as with the standard flow formulation.
 
-With full connectivity and the standard conductance-based flow formulation (Figure \ref{fig:fig4c}), the magnitude of the error in the flux magnitude is no greater than {\color{red}X}\% of the analytical solution of 1 m/d, and the magnitude of the error in the flux direction is no greater than {\color{red}X}$^{\circ}$, at dip angles less than 40$^{\circ}$ for all of the conductivity ratios simulated. Given that the cells within the aquifer are square, cells that are nominally in the same grid layer within the aquifer no longer share any interfacial area, i.e., the become hydraulically disconnected, at a dip angle of 45$^{\circ}$. A second transition in connectivity occurs at a dip angle of approximately 63$^{\circ}$, and at a dip angle of approximately 72$^{\circ}$ the vertical columns of cells within the aquifer are completely disconnected from their neighbors to either side. When the discretization used to represent the aquifer becomes substantially disconnected, it cannot be expected to support accurate results. Note that for coarser horizontal discretization, transitions in connectivity within the aquifer would occur at smaller dip angles.
+With full connectivity and the standard conductance-based flow formulation (Figure \ref{fig:fig4}c), the magnitude of the error in the flux magnitude is less than 17\% of the analytical solution of 1 m/d, and the magnitude of the error in the flux direction is less than 10$^{\circ}$, at dip angles less than 40$^{\circ}$ for all of the conductivity ratios simulated. Given that the cells within the aquifer are square, cells that are nominally in the same grid layer within the aquifer no longer share any interfacial area, i.e., the become hydraulically disconnected, at a dip angle of 45$^{\circ}$. A second transition in connectivity occurs at a dip angle of approximately 63$^{\circ}$, and at a dip angle of approximately 72$^{\circ}$ the vertical columns of cells within the aquifer are completely disconnected from their neighbors to either side. When the discretization used to represent the aquifer becomes substantially disconnected, it cannot be expected to support accurate results. Note that for coarser horizontal discretization, transitions in connectivity within the aquifer would occur at smaller dip angles.
 
-With full connectivity and the XT3D flow formulation (Figure \ref{fig:fig4d}), the magnitude of the error in the flux magnitude is no greater than {\color{red}X}\% of the analytical solution of 1 m/d, and the magnitude of the error in the flux direction is no greater than {\color{red}X}$^{\circ}$, at dip angles less than 40$^{\circ}$ for all of the conductivity ratios simulated. The effects of hydraulic disconnection of cells with the aquifer are evident at approximately 63$^{\circ}$ for the magnitude of the error in flow magnitude and at 45$^{\circ}$  for the magnitude of the error in flow direction. Overall, use of full connectivity with the XT3D flow formulation reduces the error in calculated flows.
+With full connectivity and the XT3D flow formulation (Figure \ref{fig:fig4}d), the magnitude of the error in the flux magnitude is less than 3\% of the analytical solution of 1 m/d, and the magnitude of the error in the flux direction is less than 1$^{\circ}$, at dip angles less than 40$^{\circ}$ for all of the conductivity ratios simulated. The effects of hydraulic disconnection of cells within the aquifer are evident at approximately 63$^{\circ}$ for the magnitude of the error in flow magnitude and at 45$^{\circ}$  for the magnitude of the error in flow direction. Overall, use of full connectivity with the XT3D flow formulation substantially reduces the error in calculated flows.
 
 \begin{figure}[p!]
 \centering
 \begin{subfigure}{0.9\textwidth}
 	\includegraphics[width=\textwidth]{../figures/fig4_0_paper.png}
 %	\caption{layered-connectivity grid, standard conductance-based formulation}
-	\label{fig:fig4a}
+%	\label{fig:fig4a}
 \end{subfigure}
 \begin{subfigure}{0.9\textwidth}
 	\includegraphics[width=\textwidth]{../figures/fig4_1_paper.png}
 %	\caption{layered-connectivity grid, XT3D}
-	\label{fig:fig4b}
+%	\label{fig:fig4b}
 \end{subfigure}
 \begin{subfigure}{0.9\textwidth}
 	\includegraphics[width=\textwidth]{../figures/fig4_2_paper.png}
 %	\caption{full-connectivity grid, standard conductance-based formulation}
-	\label{fig:fig4c}
+%	\label{fig:fig4c}
 \end{subfigure}
 \begin{subfigure}{0.9\textwidth}
 	\includegraphics[width=\textwidth]{../figures/fig4_3_paper.png}
 %	\caption{full-connectivity grid, XT3D}
-	\label{fig:fig4d}
+%	\label{fig:fig4d}
 \end{subfigure}
 
-\caption{Flux magnitude and direction at the cell in the center of the aquifer as a function of aquifer dip angle for various ratios of domain to aquifer conductivity (blue, orange, green, red lines). The analytical solution is shown as a black dashed line. {\color{red} CHANGE RATIO NUMBERS TO THEIR RECIPROCALS}}
-\label{fig:figures}
+\caption{Flux magnitude and direction at the cell in the center of the aquifer as a function of aquifer dip angle for various ratios of domain to aquifer conductivity (blue, orange, green, red lines). The analytical solution is shown as a black dashed line.}
+\label{fig:fig4}
 \end{figure}
 
 \subsection{Effect of Anisotropy}
@@ -215,23 +204,19 @@ The base case and variations up to this point have used isotropic hydraulic cond
 
 \section{Conclusions}
 
-\cite{bardot2022} revisited the capability of MODFLOW to accurately simulate groundwater flow through sedimentary structures.  They concluded that the XT3D multi-point flux approximation in MODFLOW 6 significantly improves the accuracy of simulated flows when used with a grid-overlay approach in which locations of sedimentary structures, which can be steeply dipping, are mapped onto a relatively fine, rectilinear model grid.  They also concluded that the XT3D multi-point flux approximation does not perform as well as anticipated when simulating flow through a steeply dipping hydrogeologic layer using deformed (vertically offset) grids, which are advantageous for significantly reducing the number of grid layers required for many problems.  They hypothesized that the inherently limited lateral connectivity between cells in DIS and DISV layered grids in MODFLOW 6 was responsible for the inability to obtain accurate flow results in their steeply dipping test problems using vertically offsets grids, with or without XT3D.
+\cite{bardot2022} revisited the capability of MODFLOW 6 to accurately simulate groundwater flow through sedimentary structures. They observed that calculated flows involved significant error in a benchmark problem that simulated flow through a steeply dipping hydrogeologic layer using vertically offset grids, whether or not the XT3D multi-point flow formulation was used. They hypothesized that inadequate lateral connectivity between model cells was responsible for the inability to obtain accurate flow results in their benchmark problem.
 
-In this paper, we have confirmed that the layered lateral connectivity implemented in DIS and DISV model grids is inadequate for simulating groundwater flow through steeply dipping sedimentary structures, even when the XT3D multi-point flux approximation is used.  However, when connections between laterally adjacent cells in different grid layers are added to comprise a grid with full connectivity, there is a substantial increase in the accuracy of simulated flows.  The additional connectivity is implemented using the fully unstructured (DISU) grid type.  Importantly, this accuracy improvement requires that at least two grid layers be used to represent the dipping aquifers, with additional grid layers required for very steep dips above 65$^{\circ}$.  The primary conclusion of this paper is that, given appropriate discretization and cell connectivity, the XT3D multi-point flux approximation implemented in MODFLOW 6 can be combined with vertically offset grids to efficiently and accurately model flows through steeply dipping sedimentary structures.  Prior to this work, the capability to efficiently and accurately model flow through steeply dipping sedimentary structures was generally restricted to finite element simulators.
+In this paper, we have confirmed that the layered lateral connectivity offered by DIS and DISV model grids can be inadequate for simulating groundwater flow through steeply dipping sedimentary structures, even when the XT3D multi-point flow formulation is used.  However, when connections between laterally adjacent cells in different grid layers are added to comprise a grid with full connectivity, there can be a substantial increase in the accuracy of simulated flows.  The additional connectivity is implemented using the fully unstructured (DISU) grid type in MODFLOW 6. This accuracy improvement requires that at least two grid layers be used to represent the dipping aquifers, with additional grid layers required for very steep dips.
 
-The importance of adequate connectivity has been explained and evaluated in this work specifically in terms of hydrogeologic layers that correspond to sedimentary structures. However, the impact of cell connectivity on the accuracy of simulated flows should be considered in any MODFLOW application that models flow through a heterogeneous hydraulic conductivity field using a grid with large vertical offsets between laterally adjacent cells, whether or not the grid has a layered structure. The full connectivity needed to improve accuracy can be implemented using the DISU grid types in both MODFLOW 6 and MODFLOW-USG.
+Our benchmark results suggest that, given appropriate discretization and cell connectivity, the XT3D multi-point flow formulation implemented in MODFLOW 6 can be combined with vertically offset grids to efficiently and accurately model flows through steeply dipping sedimentary structures. Future work may investigate the accuracy of calculated flows under different hydraulic gradients, as well as the implications of grid connectivity for more complex and realistic flow systems.
 
-{\color{red} AMP: mention that our method reestablishes boundary matching as an efficient alterternative to grid overlay on vertically offset grids}
-
-{\color{red} AMP: mention crossflow}
-
+The importance of adequate grid connectivity has been explained and evaluated in this work specifically in terms of hydrogeologic layers that correspond to sedimentary structures. However, the impact of cell connectivity on the accuracy of simulated flows could be important in any MODFLOW application that models flow through a heterogeneous hydraulic conductivity field using a grid with large vertical offsets between laterally adjacent cells, whether or not the grid has an explicitly layered structure.
 
 \section{Acknowledgments}
-We would like to acknowledge.... {\color{red} that this paper is almost ready to GO!! Yeeeha!}
+{\color{red} (Will acknowledge reviewers)}
 
 \section{Supporting Information}
-
-\section{Appendix}
+{\color{red} (To be determined)}
 
 \bibliography{references.bib}
 
