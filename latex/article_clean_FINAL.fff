@@ -9,8 +9,8 @@
  
 \begin{figure}[p!]
 \begin{center}
-\includegraphics[scale=0.8]{../figures/fig2_paper.png}
-\caption{Numerical results for the test problem using base-case settings for layered-connectivity and full-connectivity grids, with the standard conductance-based formulation as well as the XT3D formulation. The left panel of each scenario shows the calculated specific discharge at each cell center (arrows). The middle panel shows the face flows (arrows). The right panel shows head contours for the analytical solution (black) as well as the numerical solution (blue).}
+\includegraphics[scale=0.75]{../figures/fig2_paper.png}
+\caption{Numerical results for the test problem using base-case settings for layered-connectivity and full-connectivity grids, with the standard conductance-based formulation as well as the XT3D formulation. The left panel of each scenario shows the calculated specific discharge at each cell center (arrows). The middle panel shows the face flows (arrows). The right panel shows head contours for the analytical solution (black) as well as the numerical solution (blue). Flux magnitudes, flux directions (angles), and head errors are reported to two decimal places. Percent errors in flow are reported to one decimal place.}
 \label{fig:fig2}
 \end{center}
 \end{figure}
