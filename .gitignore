@@ -10,6 +10,7 @@
 *.fot
 *.cb
 *.cb2
+*.fff
 
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl
@@ -36,3 +37,4 @@ __pycache__
 python/disu_model
 python/wormholes
 python/transect_benchmark
+model
